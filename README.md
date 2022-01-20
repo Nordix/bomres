@@ -1,2 +1,2 @@
 # bomres
-Software Bill-of-Material Resolver
+Software Bill-of-Material Resolver for Alpine
