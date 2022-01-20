@@ -1,0 +1,858 @@
+openapi: '3.0.1'
+
+info:
+  title: Alpine BOM Resolver
+  description: |
+
+    This service manages metadata extracted from Alpine ECO system. The design goals are<br>
+    <ul>
+    <li> Support agile development by using <strong>binary</strong> components. 
+    <li> Provide a complete Bill-of-material including <strong>source code and patches</strong>. 
+    </ul>
+    The current implementation is based on two containers, one for building Alpine images <br>
+    and the another for resolving metadata. 
+
+    <H1>Security</H1>
+    It is recommended to install rootless docker, otherwise root is required. 
+    ```json
+       $ sudo curl -fsSL https://get.docker.com/rootless | sh
+    ```
+    
+    <H2>Resolver as a containerized tool</H3>
+    
+    ```json
+
+       $ docker run dr.t2data.com/resolver/base_os_alpine make > Makefile 
+       $ make build
+       $ make resolve
+    ```
+    <H2>Deployed as a local service</H2>
+    ```json
+       $ docker run dr.t2data.com/resolver/sbom-resolver make > Makefile 
+       $ make service & 
+       $ make build  
+    ```
+    <H2>Deployed as code</H2>
+    ```json
+      docker run   --rm -it    dr.t2data.com/resolver/base_os_alpine:latest cat /opt/base_os/scripts/aggregate_bom.py
+      docker run   --rm -it    dr.t2data.com/resolver/base_os_alpine:latest cat /opt/base_os/scripts/bom.sh
+      find . -name APKINDEX.tar.gz | cut -c3- |  tar cf /sandbox/base_os/sbom/apkindex.tar -T -
+      python3 aggregate_bom.py  --pkgindex apkindex.tar    --desired packages   --config settings  --resolved os.bom   --output aggregated.json
+    ```
+
+    <H2>Deployed as three services in Kubernetes</H2>
+    Read the documentation in the source code repository how to deploy in a cluster.<br>
+    There is some performance issues with git and persistent volumes.
+    <ul>
+     <li>Token service with support for client grant and mTLS RFC8705 
+     <li>SBOM Facade, stateless deployment of CI/CD frontend 
+     <li>SBOM Alpine resolver 
+    </ul>
+    
+    <H1>References</H1>
+    <ul>
+    <li><a href="https://fosdem.org/2022/">FossDem2022 Presentation Georg Kunz</a>
+    <li><a href="https://github.com/Nordix/bomres">Source Code</a>
+    </ul>
+
+
+  version: "1.0.13"
+  x-api-id: 93656f6b-9736-46c7-b821-90137ef9feff
+  x-audience: public
+  contact:
+    name: Hans Thorsen Lamm 
+    email: hans.thorsen@ericsson.com
+
+
+
+servers:
+  - url: /resolver/alpine/v1
+    description: Cache management 
+
+tags:
+  - name: Aports 
+    description: Source code 
+  - name: Apkindex  
+    description: Binary packages
+  - name: SBOM  
+    description: Resolve dependencies for bom 
+  - name: Authentication  
+    description: Endpoint for accesstoken 
+
+
+paths: 
+  /token:
+    parameters:
+      - $ref: '#/components/parameters/Accept'
+      - $ref: '#/components/parameters/FlowId'
+      - $ref: '#/components/parameters/Authorization'
+    post:
+      tags:
+        - Auth
+      summary: 'Retrieve JSON Web Token (JWT)'
+      description: ""
+      requestBody:
+        description: 'Request body'
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  description: |
+                    The method used to accquire an access token.
+                    _Available values:_
+                    - client_credentials
+                  type: string
+                  x-extensible-enum:
+                    - client_credentials
+                  example: client_credentials
+                client_id:
+                  type: string
+                  example: artifact.product.example.org
+                client_secret:
+                  description: |
+                    For confidential clients a secret is required.
+                  type: string
+                  example: dead-beef
+                scope:
+                  description: 'List of scopes'
+                  type: string
+                  example: read write
+              required:
+                - grant_type
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                format: ascii
+        '400':
+          description: 'Bad request'
+          content:
+            application/json:
+              schema:
+                type: string
+                format: ascii
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+        '500':
+          description: Internal Server Error
+      security: []
+
+  /file:
+    parameters:
+      - $ref: '#/components/parameters/Accept'
+      - $ref: '#/components/parameters/FlowId'
+      - $ref: '#/components/parameters/Authorization'
+    post:
+      tags:
+        - Aports 
+      summary:
+        Retrieve local file   
+      description: |
+        Get local contributions and patches from Alpine Aports 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Retrieve'
+      responses:
+        200:
+          description: PlantUML sequence diagram 
+          headers:
+            X-Ratelimit-Limit:
+              schema:
+                type: integer
+              description:
+                The maximum number of requests that your client is allowed to make in this window
+            X-Ratelimit-Remaining:
+              schema:
+                type: integer
+              description:
+                The number of requests remaining in the current window.
+            X-Flow-ID:
+              schema:
+                type: string
+              description: |
+                Outbound flowID, verbatim copy of inbound flowID
+            Authorization:
+              schema:
+                type: string
+
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: ascii
+        default:
+          description: Error object
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+      security:
+        - IAFW: [] 
+
+
+  /src:
+    parameters:
+      - $ref: '#/components/parameters/Accept'
+      - $ref: '#/components/parameters/FlowId'
+      - $ref: '#/components/parameters/Authorization'
+
+    post:
+      tags:
+        - Aports 
+      summary:
+        Inital clone of Alpine repository 
+      description: |
+         Initial population of cache by cloning the git repository<p>
+         <pre>
+         git clone git://git.alpinelinux.org/aports
+         </pre>
+         THe cloned repostiry is stored in a directory specified by environment APORTS_DIR
+
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object  
+              properties:
+                 url: 
+                    type: string
+                    format: binary
+                    example: git://git.alpinelinux.org/aports
+      responses:
+        200:
+          description: Repository cloned  
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Error object
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+      security:
+        - IAFW: [] 
+
+
+    get:
+      tags:
+        - Aports 
+      summary:
+        list clones  
+      description: |
+        Return a list of all clones  
+      responses:
+        200:
+          description: Repository cloned  
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Error object
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+      security:
+        - IAFW: [] 
+
+  /src/{aport_uuid}:
+    parameters:
+      - $ref: '#/components/parameters/Accept'
+      - $ref: '#/components/parameters/FlowId'
+      - $ref: '#/components/parameters/Authorization'
+    delete:
+      tags:
+        - Aports 
+      summary:
+        Remove cloned Aports repository  
+      description: |
+        The entire clone is removed, therefor a new clone is required 
+      parameters:
+        - $ref: '#/components/parameters/aport_uuid'
+      responses:
+        200:
+          description: PlantUML sequence diagram 
+          headers:
+            X-Ratelimit-Limit:
+              schema:
+                type: integer
+              description:
+                The maximum number of requests that your client is allowed to make in this window
+            X-Ratelimit-Remaining:
+              schema:
+                type: integer
+              description:
+                The number of requests remaining in the current window.
+            X-Flow-ID:
+              schema:
+                type: string
+              description: |
+                Outbound flowID, verbatim copy of inbound flowID
+            Authorization:
+              schema:
+                type: string
+
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Input file not parsable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        default:
+          description: Error object
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+      security:
+        - IAFW: [] 
+
+
+  /index:
+    post:
+      tags:
+        - Apkindex
+      summary:
+        Combine APKINDEX with ABUILD 
+      description: |
+          By backtracing it means to find all related code. 
+          <ul>
+           <li>Code from other project than alpine ( External code )
+           <li>Patches to be applied on external code, there are two types of patches
+           <ul>
+             <li>External retrieved from other sites than Alpine
+             <li>Internal patches stored in the Alpine source repository
+           </ul>
+           <li>Internal code contributed to the component
+          </ul>
+          <p>
+          There are two sources of information used to backtrack binary to upstream source. 
+          <p>
+          <ul>
+          <li>APBBUILD    ( Manifest that controls the build process)
+          <li>APKINDEX.tar.gz ( Index used by apk utility to manage packages on a live system)
+          </ul>
+          Some subdirectories in the Aports repository maps to a specific APKINDEX.tar.gz. It is important 
+          then backtracking to associate a specific package with the repo in the list below. 
+          <ul>
+          <li>main: contains the basic set of packages for Alpine Linux
+          <li>community: contains the additional packages that, for various reasons, are not guaranteed to be supported beyond six months 
+          <li>testing: packages will be moved to main if there is positive feedback or for other good reasons
+          <li>non-free: The packages in non-free are violating the standards of the Free Software Foundation
+          </ul> 
+
+          <h2>APKINDEX.tar.gz</h2>
+          The Alpine package manager have a update utility that retrieve the latest index file from<br>
+          remote repository. 
+    
+          The package manager consults /etc/apk/repositories for mirrors to download packages
+          <pre>
+          # packages stored locally 
+          /download/v3.14/main
+          /download/v3.14/community
+          </pre> 
+          <pre>
+          # packages provided on Internet 
+          https://dl-cdn.alpinelinux.org/alpine/v3.14/main
+          https://dl-cdn.alpinelinux.org/alpine/v3.14/community
+          </pre>
+          For each repository the APKINDEX.tar.gz is located next to all bimaries, this file contains two textfiles. 
+          <p>
+          <h3>DESCRIPTION</h3
+          <pre>
+          v3.14.2-1-g0312522127
+          </pre>
+          <ul>
+          <li> v3.14.2:  Corresponds to the tag in the Aports repository ( git checkout v3.14.2)
+          <li> 1: Build number ? 
+          <li>0312522127 Git commit hash 
+          </ul>
+          It is important that client of this service keep track of the APKINDEX.tar.gz since it contain<p>
+          information about the corresponding version of the aports repo. 
+          <p>
+          <h3>APKINDEX</h3>
+          <pre>
+          C:Q1fPx1VgspgdnmnNsSJyKOHnf8yuM=
+          P:curlie
+          V:1.6.0-r1
+          A:x86_64
+          S:985271
+          I:2674688
+          T:Curlie is a frontend to curl that adds the ease of use of httpie
+          U:https://github.com/rs/curlie
+          L:MIT
+          o:curlie
+          m:André Klitzing <aklitzing@gmail.com>
+          t:1622935228
+          c:fd8515a4f9ff5b8a40a5f7d4417e2d42de508604
+          D:curl
+          p:cmd:curlie
+          </pre>
+          Each packages have a section with the structure above.  Dependency information is defined here. 
+          <ul>
+          <li>P: name of package
+          <li>o: Parent package 
+          <li>D: Dependendencies 
+          </ul>
+
+
+
+          <h1>Aports manifest repository</h1>
+          All APKBUILD manifests for all packages could be retrieved from a monorepo  git://git.alpinelinux.org/aports 
+          <p>
+          <h2>caveats</h2>
+          Most of the build manifest comply with a formal and strict syntax, but there is some exemptions. <p>
+          1. <a href="https://wiki.archlinux.org/title/GNOME_package_guidelines">Gnome package Guidelines</a>
+          <p>
+          Openssl for instance may have version 1.1.1k , but the library must be assigned libcrypto1.1.so <p>
+          <p>2. Conditional dependencies<p>
+          Some upstream components such as musl results in several Alpine packages ( subpackages ).<p>
+          To resolve the value, the build must be invoked, static parsing is not possible. <p>
+          This service combines information from APKBUILD with APKINDEX to get the correct list of subpackages. 
+          <p>
+
+          <pre>
+          case "$BOOTSTRAP" in
+             nocc)   pkgname="musl-dev"; subpackages="";;
+             nolibc) ;;
+            *)      subpackages="$subpackages $pkgname-utils";;
+          esac
+          </pre>
+          <p>
+          3. Local file specification with double colon ::<p>
+          The upstream url specification may include a hint where to store the download file. <p>
+          CVE-2017-15371.patch::https://github.com/mansr/sox/commit/818bdd0.patch
+          <p>
+          4. One package client and many APKINDEX.tar.gz files.<br><p>
+          The apk package manager consults several index files during the installation process<br>
+          to resolve all dependencies. Each indexfile have a independent reference to the aports source repository.<br>
+          Since the APKINDEX.tar.gz are genererated as a result of a automated CI/CD flow it is crucial <br>
+          to preserve all indexfiles being used together with the list of all resolved packages. 
+          <p>
+          5. Mix of different versions used in different repos <br>
+          <p>
+          Below is a sample of a analyzed suite of APKINDEX.tar.gz files. In order to backtrack two different versions of aport is needed. 
+          <pre>
+          "repo": {
+                  "community": {
+                    "build-number": "1",
+                    "hash": "0312522127",
+                    "raw": "v3.14.2-1-g0312522127",
+                    "tag": "v3.14.2"
+                  },
+                  "main": {
+                    "build-number": "104",
+                    "hash": "035eb230f7",
+                    "raw": "v3.14.1-104-g035eb230f7",
+                    "tag": "v3.14.1"
+                  }
+                }
+          </pre>
+
+          <h2>versioning</h2>
+          <p>
+          <pre>
+          $ git show-ref --tags 
+          tags/v3.14.0_rc4
+          tags/v3.14.1
+          tags/v3.14.2
+          </pre>
+          <p>
+          <h2>product structure</h2>
+          <p>
+          <h2>Content of APKBUILD</h2>
+          Below is a extract of APKBUILD that indicates the data being extracted. 
+          <pre>
+          pkgname=curl
+          pkgver=7.78.0
+          pkgrel=0
+          pkgdesc="URL retrival utility and library"
+          url="https://curl.se/"
+          arch="all"
+          license="MIT"
+          depends="ca-certificates"
+          depends_dev="openssl-dev nghttp2-dev zlib-dev brotli-dev"
+          checkdepends="nghttp2 python3"
+          makedepends_host="$depends_dev"
+          makedepends_build="autoconf automake groff libtool perl"
+          subpackages="$pkgname-dbg $pkgname-static $pkgname-doc $pkgname-dev libcurl"
+          source="https://curl.se/download/curl-$pkgver.tar.xz"
+          options="net" # Required for running tests
+          </pre>
+    
+          <h1>Functionality</h1>
+          To better scale, two services are involved to provide information required to resolve packages<p>
+          One service is resonsible to clone and pull the external Aport repo<p>
+          This service must exists in one replica, othwerwise data could be corrupted. 
+          <p>
+          For each Software Bom to be resolved, the corresponding APKINDEX.tar.gz must be posted<p>
+          The git command checkout is then executed with the associated tag. Upon sucess all APKBUILD files is<p>
+          then copied to a tree structure APKBUILD.githash.  The second microservice ( apk-resolver) could be replicated<p>
+          since it operates in readonly mode. 
+
+          <h2>Aport management</h2>
+          <ul>
+          <li> git clone git://git.alpinelinux.org/aports
+          <li> git pull 
+          <li> git checkout tag
+          </ul> 
+          <h2>APKINDEX management</h2>
+          <li>Post Indexfile and generate cache
+          <li>Check if cache exists for a specific Indexfile
+          <p>
+          Due to backporting of improvements, such as security vulnerablites related to CVE:s old and stable<br>
+          versions of Alpine may be updated in the source code repository ( aport ). 
+          
+          <H1>References</H1>
+          <ul>
+           <li><a href="https://wiki.adelielinux.org/wiki/APK_internals">APK Internals</a>
+           <li><a href="https://wiki.alpinelinux.org/wiki/Apkindex_format">APK Index</a>
+           <li><a href="https://wiki.alpinelinux.org/wiki/Alpine_newbie_apk_packages">apk tutorial</a>
+           <li><a href="https://www.linkedin.com/pulse/creating-alpine-linux-package-repository-afam-agbodike">Create Alpine repository</a>
+          </ul>
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                 apkindex:
+                    type: string
+                    format: binary
+                    example: APKINDEX.tar.gz 
+      responses:
+        200:
+          description: Repository cloned
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Error object
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+      security:
+        - IAFW: []
+
+
+  /aggregate:
+    parameters:
+      - $ref: '#/components/parameters/Accept'
+      - $ref: '#/components/parameters/FlowId'
+      - $ref: '#/components/parameters/Authorization'
+
+    post:
+      tags:
+        - SBOM
+      summary: Upload metadata from a software build
+      description: "Input information about a build "
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/BomModel"
+      responses:
+        default:
+           description: Default problem response
+           content:
+             application/problem+json:
+               schema:
+                 $ref: "#/components/schemas/Problem"
+
+        "200":
+          description: "Succesfull conversion to SBOM Format"
+          headers:
+            X-Ratelimit-Limit:
+              schema:
+                type: integer
+              description:
+                The maximum number of requests that your client is allowed to make in this window
+            X-Ratelimit-Remaining:
+              schema:
+                type: integer
+              description:
+                The number of requests remaining in the current window.
+            X-Flow-ID:
+              schema:
+                type: string
+              description: |
+                Outbound flowID, verbatim copy of inbound flowID
+            Authorization:
+              schema:
+                type: string
+              description: |
+                Access token must be passed to downstream services, but not for customer facing services
+          content:
+            application/json:
+              schema:
+                type: string
+                format: ascii
+      security:
+        - IAFW: []
+
+
+  /resolve:
+    post:
+      tags:
+        - SBOM 
+      summary:
+        Resolve composition and patches
+      description: |
+          Resolve all external dependencies reqquired to build the binary version of the component. 
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                 sbom:
+                    type: string
+                    format: binary
+                    example: bom.json 
+      responses:
+        200:
+          description: Repository cloned
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Error object
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+      security:
+        - IAFW: []
+
+components:
+  securitySchemes:
+    IAFW:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /resolver/alpine/v1/token
+          scopes:
+            write: Grant write access
+  parameters:
+
+    aport_uuid:
+      name: aport_uuid
+      description: Aport Unique identifier
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9-]+$'
+    Authorization:
+      in: header
+      name: Authorization
+      example: dead-beef
+      required: false
+      schema:
+        type: string
+      description: |
+        Bearer with access token JWT encoded
+    FlowId:
+      in: header
+      name: X-Flow-ID
+      example: dead-beef
+      required: false
+      schema:
+        type: string
+      description: |
+        Inbound flowID, provided by upstream service
+    Accept:
+      in: header
+      name: accept
+      example: applications/csv
+      required: false
+      schema:
+        type: string
+      description: |
+        Generate template for import to EVMS if applications/csv is specified
+
+  schemas:
+
+    Retrieve:
+      type: object
+      required:
+        - path
+        - commit
+        - repository_id
+      properties: 
+        path:
+          description: path inside Aports source repository
+          type: string
+          example: main/libcap-ng/apply-disable.patch
+        commit:
+          description: state of Aports git repository 
+          type: string
+          example: 273f76be99
+        repository_id:
+          description: Identifier of cloned Aports repository 
+          type: string
+          example: bf08e96b-da14-4355-9024-ea6ceb937d60
+    BomModel:
+      type: object
+      required:
+        - pkgindex
+        - resolved
+        - desired
+        - config
+      properties: # Request parts
+        pkgindex:
+          description: "Index of dependencies from linux distribution, for Alpine the file is APKINDEX.tar.gz"
+          type: string
+          format: application/x-tar
+          example: "Binary data, uncompressed tar file tgf and pom for each maven module"
+        resolved:
+          description: "List of packages in Linux distribution"
+          type: string
+          example: "a,rhel,sqlite,3.7.17,8.el7,rhel_linux,http://www.sqlite.org/"
+        desired:
+          description: "List of desired packages in Base OS"
+          type: string
+          example: "sqlite #S"
+        config:
+          description: "Build configuration file"
+          type: string
+          example: "REPO_URL=http://dl-cdn.alpinelinux.org/alpine"
+
+    Problem:
+      type: object
+      title: RFC standardized error message
+      properties:
+        type:
+          type: string
+          format: uri
+          description: |
+            An absolute URI that identifies the problem type.  When dereferenced,
+            it SHOULD provide human-readable documentation for the problem type
+            (e.g., using HTML).
+          default: 'about:blank'
+          example: 'https://zalando.github.io/problem/constraint-violation'
+        title:
+          type: string
+          description: |
+            A short, summary of the problem type. Written in english and readable
+            for engineers (usually not suited for non technical stakeholders and
+            not localized); example: Service Unavailable
+        status:
+          type: integer
+          format: int32
+          description: |
+            The HTTP status code generated by the origin server for this occurrence
+            of the problem.
+          minimum: 100
+          maximum: 600
+          exclusiveMaximum: true
+          example: 503
+        detail:
+          type: string
+          description: |
+            A human readable explanation specific to this occurrence of the
+            problem.
+          example: Connection to database timed out
+        instance:
+          type: string
+          format: uri
+          description: |
+            An absolute URI that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.
+
+
+    token:
+      description: | 
+                  This schema violates the linter since it is not used directly.<br> 
+                  The token is specified as a parameter and passed as a header encoded as base64.<br>
+      required:
+        - jti
+        - upn
+      properties:
+        jti:
+          type: string
+          example: "37fbd679-e7c7-44e1-81af-1c662eeaaf0c"
+          description: "Unique identifier of token "
+        upn:
+          type: string
+          example: "account@domain.org"
+          description: "userPrincipalName RFC 822"
+        groups:
+          description: | 
+                  The properties listed here match the scopes listed in securitySchemes.<br>
+                  In this example the claims and scope share the same name ( read and write ).<br>
+                  <br>
+                  The description field is used to maps the nethod(s) allowed for each scope. 
+          type: array
+          items:
+            type: object
+            properties:
+              read:
+                type: string
+                description: "get"
+              write:
+                type: string
+                description: "post,patch,put,delete"
+
+    authorization:
+      description: | 
+              This section indicates how token being used to authorize access
+                Two additional schemas has been added to model.
+                <ul>
+                 <li>token Specifies all claims consumed by this services
+                 <li>authorization  Maps which claim in the token is used for authorization
+                </ul>
+      required:
+        - groups
+      properties:
+        token:
+          type: string
+          example: groups
+          description: maps the group claim in the token to be used for authorization
+        groups:
+          type: string
+          description: |
+                  This maps the claims in the token used for authorization<br>
+                  <ul>
+                   <li>scope ( read , write ) 
+                   <li>method ( put , get , post ) 
+                   <li>path  ( /violations ) 
+                  </ul>
+ 
+
+
+
+

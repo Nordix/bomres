@@ -1,0 +1,22 @@
+---
+#
+# This defines the ingress rule
+#
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: sbom-resolver
+  labels:
+    app: sbom-resolver
+  annotations:
+    plugins.konghq.com: opa-kramfors
+spec:
+  rules:
+  - host: lb.t2data.com
+    http:
+      paths:
+      - path: /resolver/alpine/v1
+        backend:
+          serviceName: sbom-resolver
+          servicePort: 8080
+

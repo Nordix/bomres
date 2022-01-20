@@ -1,0 +1,6 @@
+apiVersion: v2
+name: sbom_resolver
+appVersion: "2.0"
+description: A Helm chart for deploying SBOM Resolver Service
+version: 0.1.0
+type: application

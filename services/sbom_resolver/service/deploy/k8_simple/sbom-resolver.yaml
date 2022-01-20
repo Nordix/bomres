@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sbom-resolver
+  labels:
+   app: sbom-resolver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sbom-resolver
+
+  # 
+  # This is used as template when new pods being created 
+  #
+  
+  template:
+    metadata:
+      labels:
+        # This label is a key 
+        app: sbom-resolver
+    spec:
+      containers:
+      - name: sbom-resolver
+        image: dr.t2data.com/resolver/sbom-resolver:1.0.13
+        volumeMounts:
+        - name: bomresolver-cache
+          mountPath: /mnt/alpine/cache
+        env:
+        - name: APORTS_CACHE
+          value: /mnt/alpine/cache
+        resources:
+          limits:
+            memory: "800Mi"
+          requests:
+            memory: "800Mi"
+        ports:
+        - containerPort: 8080
+      volumes:
+      - name: bomresolver-cache
+        persistentVolumeClaim:
+          claimName: bomresolver-storage-cache
+
+
+
+---
+
+  # 
+  # This section specifies the route from the node to a pod  
+  #
+  
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: sbom-resolver
+  name: sbom-resolver
+spec:
+  externalTrafficPolicy: Cluster
+  type: NodePort
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: sbom-resolver

@@ -1,0 +1,41 @@
+
+#
+# Desired SBOM for Python 
+#
+cryptography  
+pyparsing 
+influxdb 
+pycurl 
+requests
+pytz
+scapy
+rq
+mysql-connector-python
+sqlalchemy
+six
+connexion  #S
+PyJWT
+jwcrypto
+swagger-ui-bundle
+python_dateutil
+setuptools
+flask_cors
+basicauth
+requests-toolbelt
+pycurl-requests
+cffi
+stdiomask
+connexion[swagger-ui]
+Flask
+PyYAML
+jsonschema
+python-jose
+spdx-tools
+
+# PKI  
+ownca
+
+# Open API Development 
+openapi-schema-pydantic
+#datamodel-code-generator
+jsonref

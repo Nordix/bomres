@@ -1,0 +1,169 @@
+ 9 jan 2022 17:58:30 CET by ehathor
+
+
+There is a small utility for downloading patches and addons,  The purpose is to find bugs and requirements. 
+
+api/get_file_git.py
+
+
+#1 Parsing of multiple sources 
+
+A list of files in APKBUILD must be added to the JSON as separate entries. 
+
+busybox-initscripts
+
+source="acpid.initd crond.initd dnsd.initd httpd.initd inetd.initd klogd.initd
+        mdev.initd ntpd.initd rdate.initd syslog.initd udhcpd.initd loadkmap.initd
+        watchdog.initd crond.confd klogd.confd ntpd.confd rdate.confd syslog.confd
+        watchdog.confd loadkmap.confd mdev.conf dvbdev usbdev persistent-storage
+
+
+"local": {
+      "path": "main/busybox-initscripts/acpid.initd crond.initd dnsd.initd httpd.initd inetd.initd klogd.initd",
+
+
+#2 The Complete SBOM spans several APKINDEX files ( main / community ) to speed up copying the algorithm should sort entries for each repo 
+
+
+
+    "community": {
+      "build-number": "185",
+      "hash": "bcd59a6d7f",
+      "raw": "v3.15.0-185-gbcd59a6d7f",
+      "tag": "v3.15.0"
+    },
+    "main": {
+      "build-number": "184",
+      "hash": "273f76be99",
+      "raw": "v3.15.0-184-g273f76be99",
+      "tag": "v3.15.0"
+    }
+
+
+#3  Timeout for external downloads 
+
+docker run -i -t -v "$PWD/data:/sbom" -v "/tmp/alpine/src:/mnt/alpine/src" -v "$PWD/source:/source"  sbom-resolver:1.0.6 external
+mode: external
+tag: v3.15.0
+mode: external
+HEAD is now at c5fdd2570c main/haveged: upgrade to 1.9.17
+Extenal code downloaded: https://git.musl-libc.org/cgit/musl/snapshot/v1.2.2.tar.gz
+Extenal code downloaded: https://busybox.net/downloads/busybox-1.34.1.tar.bz2
+Extenal code downloaded: https://salsa.debian.org/md/netbase/-/raw/v6.2/etc/protocols
+
+
+
+
+----------------------------------------------------------------------
+
+get:
+        python3 get_file_git.py  --src /tmp/alpine/src/aports --resolved  /tmp/resolved.json  --output /tmp --debug
+
+
+
+python3 get_file_git.py  --src /tmp/alpine/src/aports --resolved  /tmp/resolved.json  --output /tmp --debug
+Tag: v3.15.0
+Problem with component [busybox-initscripts] See TODO.txt
+Problem with component [busybox-initscripts] See TODO.txt
+Problem with component [busybox-initscripts] See TODO.txt
+Problem with component [busybox-initscripts] See TODO.txt
+
+
+$ tree /tmp/src.v3.15.0.x86_64/
+/tmp/src.v3.15.0.x86_64/
+└── main
+    ├── alpine-baselayout
+    │   ├── aliases.conf
+    │   ├── blacklist.conf
+    │   ├── color_prompt.sh.disabled
+    │   ├── crontab
+    │   ├── group
+    │   ├── i386.conf
+    │   ├── inittab
+    │   ├── kms.conf
+    │   ├── locale.sh
+    │   ├── mkmntdirs.c
+    │   ├── passwd
+    │   └── profile
+    ├── apk-tools
+    │   └── _apk
+    ├── busybox
+    │   ├── 0001-adduser-default-to-sbin-nologin-as-shell-for-system-.patch
+    │   ├── 0001-ash-add-built-in-BB_ASH_VERSION-variable.patch
+    │   ├── 0001-cpio-add-support-for-ignore-devno-like-GNU-cpio.patch
+    │   ├── 0001-nologin-Install-applet-to-sbin-instead-of-usr-sbin.patch
+    │   ├── 0001-pgrep-add-support-for-matching-against-UID-and-RUID.patch
+    │   ├── 0001-properly-fix-wget-https-support.patch
+    │   ├── 0001-rev-correct-output-for-long-input-lines.patch
+    │   ├── 0002-cpio-add-support-for-renumber-inodes-like-GNU-cpio.patch
+    │   ├── 0002-fsck-resolve-LABEL-.-UUID-.-spec-to-device.patch
+    │   ├── 0003-ash-exec-busybox.static.patch
+    │   ├── 0004-app-location-for-cpio-vi-and-lspci.patch
+    │   ├── 0005-udhcpc-set-default-discover-retries-to-5.patch
+    │   ├── 0006-ping-make-ping-work-without-root-privileges.patch
+    │   ├── 0007-fbsplash-support-console-switching.patch
+    │   ├── 0008-fbsplash-support-image-and-bar-alignment-and-positio.patch
+    │   ├── 0009-depmod-support-generating-kmod-binary-index-files.patch
+    │   ├── 0010-Add-flag-for-not-following-symlinks-when-recursing.patch
+    │   ├── 0012-udhcpc-Don-t-background-if-n-is-given.patch
+    │   ├── acpid.logrotate
+    │   ├── bbsuid.c
+    │   ├── busyboxconfig
+    │   ├── busyboxconfig-extras
+    │   ├── dad.if-up
+    │   ├── default.script
+    │   └── ssl_client.c
+    ├── busybox-initscripts
+    ├── ca-certificates
+    │   ├── 0001-update-ca-fix-compiler-warning.patch
+    │   ├── 0002-replace-python-script-with-perl-script.patch
+    │   └── 0003-update-ca-insert-newline-between-certs.patch
+    ├── haproxy
+    │   ├── haproxy.cfg
+    │   ├── haproxy.initd
+    │   └── haproxy-openssl-3.patch
+    ├── libcap-ng
+    │   └── apply-disable.patch
+    ├── libeconf
+    │   └── musl-tests.patch
+    ├── libretls
+    │   └── test_program.c
+    ├── musl
+    │   ├── 0001-fix-TZ-parsing-logic-for-identifying-POSIX-form-stri.patch
+    │   ├── 0001-riscv64-define-ELF_NFPREG.patch
+    │   ├── eh-frame.patch
+    │   ├── getconf.c
+    │   ├── getent.c
+    │   ├── handle-aux-at_base.patch
+    │   ├── iconv.c
+    │   ├── ldconfig
+    │   ├── qsort_r.patch
+    │   ├── __stack_chk_fail_local.c
+    │   └── syscall-cp-epoll.patch
+    └── util-linux
+        ├── rfkill.confd
+        ├── rfkill.initd
+        └── ttydefaults.h
+
+#4 -------------------------------------------- Inconsistency when calculating index 
+
+    https://lb.t2data.com/resolver/alpine/v1/index
+
+
+     },
+      "zxing-cpp": {
+        "system": {
+          "error": "Unable to open /tmp/alpine/checkout/community/zxing-cpp/APKBUILD.e069a77b3b"
+        }
+      },
+      "zzz": {
+        "system": {
+          "error": "Unable to open /tmp/alpine/checkout/community/zzz/APKBUILD.e069a77b3b"
+        }
+      }
+    },
+    "processed": 6278
+  }
+}
+
+
