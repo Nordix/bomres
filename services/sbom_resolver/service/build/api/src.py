@@ -108,7 +108,7 @@ def search(token_info):
         tmp['uuid'] = uid
         tmp['info'] = git_manager.info("%s/aports" % APORTS_SRC)
         result.append(tmp)
-    except:
+    except BaseException:
         logger.debug("No repo found")
         return result, 200
     else:
@@ -134,7 +134,8 @@ def delete(token_info, aport_uuid):
         logger.debug(delete)
         return delete, 200
     else:
-        return connexion.problem(status=404, title=http.client.responses[404], detail="No repo found")
+        return connexion.problem(
+            status=404, title=http.client.responses[404], detail="No repo found")
 
 
 def post(token_info, **kwargs):
@@ -180,8 +181,9 @@ def post(token_info, **kwargs):
                 tmp['info'] = git_manager.info("%s/aports" % APORTS_SRC)
                 tmp['detail'] = 'Repository exists'
                 result.append(tmp)
-            except:
+            except BaseException:
                 logger.debug("No repo found")
-                return connexion.problem(status=201, title=http.client.responses[201], detail="Unable to clone repo")
+                return connexion.problem(
+                    status=201, title=http.client.responses[201], detail="Unable to clone repo")
             else:
                 return result, 200

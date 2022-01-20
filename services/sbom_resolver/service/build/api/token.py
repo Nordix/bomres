@@ -149,16 +149,18 @@ def post(**kwargs):
         if 'grant_type' in comp and comp['grant_type'] == 'password':
             error_message = "Passing client_id and client_secret in header is not secure"
             logger.error(error_message)
-            return connexion.problem(status=400, title="Weak Security", detail=error_message)
+            return connexion.problem(
+                status=400, title="Weak Security", detail=error_message)
 
         # Extract client credentials from header and append to body
         try:
             temp = headers['Authorization'].split()[1]
             client_id, client_secret = decode(temp)
-        except:
+        except BaseException:
             error_message = "Unable to decode credentials passed in header "
             logger.error(error_message)
-            return connexion.problem(status=400, title="Security", detail=error_message)
+            return connexion.problem(
+                status=400, title="Security", detail=error_message)
 
         logger.debug("client_id and client_secret passed in header")
         comp['client_id'] = client_id
@@ -201,10 +203,11 @@ def post(**kwargs):
         fp = open(TOKEN_SIGN_KEY, "r")
         signer_key = fp.read()
         fp.close()
-    except:
+    except BaseException:
         error_message = "Failed to retrieve TOKEN_SIGN_KEY  [%s]" % TOKEN_SIGN_KEY
         logger.error(error_message)
-        return connexion.problem(status=500, title="Incomplete configuration", detail=error_message)
+        return connexion.problem(
+            status=500, title="Incomplete configuration", detail=error_message)
     logger.debug("About to Sign access token")
     access_token = issue_token(signer_key, expires_in, claims)
     logger.debug("Signed ...")

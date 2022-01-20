@@ -28,9 +28,9 @@ import traceback
 
 
 import api.lib.create_apkcache as create_apkcache
-import api.lib.parse_apkbuild  as parse_apkbuild
-import api.lib.aggregate_bom   as aggregate_bom
-import api.lib.git_manager     as git_manager
+import api.lib.parse_apkbuild as parse_apkbuild
+import api.lib.aggregate_bom as aggregate_bom
+import api.lib.git_manager as git_manager
 
 
 try:
@@ -92,7 +92,6 @@ def import_json(input_file):
     return y
 
 
-
 def post(token_info, **kwargs):
 
     headers = request.headers
@@ -147,16 +146,17 @@ def post(token_info, **kwargs):
             fp = open(TMP_FILE_NAME, "rb")
             buff = fp.read()
             fp.close()
-        except:
+        except BaseException:
             logger.debug("Problem parsing  %s\n" % debug_info())
-            return connexion.problem(status=500, title=http.client.responses[500], detail="Unable to process APKINDEX")
+            return connexion.problem(
+                status=500, title=http.client.responses[500], detail="Unable to process APKINDEX")
         else:
             logger.debug("Parsing APKINDEX ok  \n")
 
         try:
             logger.debug("About to remove file %s\n" % TMP_FILE_NAME)
             os.unlink(TMP_FILE_NAME)
-        except:
+        except BaseException:
             logger.warning("Unable to remove temporary file %s" %
                            TMP_FILE_NAME)
 
@@ -164,13 +164,12 @@ def post(token_info, **kwargs):
     apkindex = aggregate_bom.process_tarball(buff, create_commit_map=False)
 
     MAIN_BRANCH = os.getenv('MAIN_BRANCH', 'master')
-    entry_exists, cache_index_file , aports_info = create_apkcache.create_cache(APORTS_SRC, MAIN_BRANCH, APORTS_CHECKOUT, APORTS_CACHE, apkindex)
-    if entry_exists == True: 
+    entry_exists, cache_index_file, aports_info = create_apkcache.create_cache(
+        APORTS_SRC, MAIN_BRANCH, APORTS_CHECKOUT, APORTS_CACHE, apkindex)
+    if entry_exists == True:
         tmp_json = {}
         tmp_json['info'] = "Entry exists [%s]" % cache_index_file
         return tmp_json, 200
-
-    
 
     logger.debug("About to create %s" % cache_index_file)
     result = {}
@@ -188,4 +187,3 @@ def post(token_info, **kwargs):
     tmp['aports'] = aports_info
     tmp['parse'] = stats
     return tmp, 200
-

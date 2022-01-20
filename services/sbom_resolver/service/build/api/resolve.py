@@ -78,9 +78,7 @@ def post(token_info, **kwargs):
     else:
         upn = 'no_upn_in_token'
 
-
     APORTS_CACHE = os.getenv('APORTS_CACHE', '/tmp/alpine/cache')
-
 
     images = request.files.to_dict()
     image = 'sbom'
@@ -93,19 +91,21 @@ def post(token_info, **kwargs):
         bom = import_json(TMP_FILE_NAME)
         try:
             os.unlink(TMP_FILE_NAME)
-        except:
+        except BaseException:
             error_message = "Unable to load SBOM "
             logger.debug(error_message)
-            return connexion.problem(status=418, title="Inbound SBOM", detail=error_message)
+            return connexion.problem(
+                status=418, title="Inbound SBOM", detail=error_message)
         else:
             logger.debug("Loaded inbound SBOM")
 
         try:
             apk_hash = bom['metadata']['aggregator']['alpine']['apkindex']['hash']
-        except:
+        except BaseException:
             error_message = "Could not find hash for apkindex"
             logger.debug(error_message)
-            return connexion.problem(status=418, title="Inbound SBOM", detail=error_message)
+            return connexion.problem(
+                status=418, title="Inbound SBOM", detail=error_message)
 
         cache_index_file = "%s/APKINDEX-%s.json" % (APORTS_CACHE, apk_hash)
         cache_path = Path(cache_index_file)
@@ -132,4 +132,5 @@ def post(token_info, **kwargs):
     else:
         error_message = "Missing SBOM"
         logger.debug(error_message)
-        return connexion.problem(status=418, title="Inbound SBOM", detail=error_message)
+        return connexion.problem(
+            status=418, title="Inbound SBOM", detail=error_message)

@@ -1,5 +1,5 @@
 #
-# gitpython should be consider 
+# gitpython should be consider
 #
 import os
 import sys
@@ -70,13 +70,13 @@ def checkout(commit_hash, aports_dir):
 
     CWD = os.getcwd()
     result = {}
-    try: 
-      os.chdir(aports_dir)
-    except: 
-      result['status'] = False
-      result['info'] = "Directory %s doest not exists" % aports_dir
-      os.chdir(CWD)
-      return result 
+    try:
+        os.chdir(aports_dir)
+    except BaseException:
+        result['status'] = False
+        result['info'] = "Directory %s doest not exists" % aports_dir
+        os.chdir(CWD)
+        return result
     cmd = "git checkout %s" % commit_hash
     tmp = run(cmd)
     if tmp['exit_code'] == 0:
@@ -151,7 +151,7 @@ def rm(directory, id):
         uid = fp.read()
         uid = uid.strip('\n')
         fp.close()
-    except:
+    except BaseException:
         uid = "X"
 
     if id != uid:
@@ -161,7 +161,7 @@ def rm(directory, id):
     result['id'] = id
     try:
         shutil.rmtree(directory)
-    except:
+    except BaseException:
         result['status'] = False
     else:
         result['status'] = True
@@ -171,7 +171,7 @@ def rm(directory, id):
 args_options = {
     'opt':
     [
-        {'long': '--debug',    'help': 'Debug mode'},
+        {'long': '--debug', 'help': 'Debug mode'},
     ],
     'opt_w_arg':
     [

@@ -19,8 +19,6 @@ except ImportError:
 #
 
 
-
-
 #
 # JSON import
 #
@@ -30,7 +28,7 @@ def import_json(input_file):
         data = fp.read()
         fp.close()
         y = json.loads(data)
-    except:
+    except BaseException:
         return {}
     else:
         return y
@@ -70,14 +68,14 @@ def handle_double_colon(string):
         index = len(tmp)
         if index > 1:
             result['remote'] = string
-            result['local'] = tmp[index-1]
+            result['local'] = tmp[index - 1]
         else:
             result['remote'] = string
             result['local'] = string
         return result
 
 
-def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
+def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
 
     parse_info = {}
     result = {}
@@ -105,9 +103,9 @@ def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
         fp = open(path)
         buff = fp.read()
         fp.close()
-    except:
+    except BaseException:
         parse_info = {}
-        parse_info['system'] = {} 
+        parse_info['system'] = {}
         parse_info['system']['error'] = "Unable to open %s" % path
         return result, parse_info
 
@@ -173,7 +171,8 @@ def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
         # Extract subpackages dependency from APKBUILD
         # Line starts with subpackages=" and ends with "
         # Could span multiple lines
-        # SUBPACKAGE:WHERE_TO_COPY sfdisk:_mv_bin , need to strip based on : ( util-linux )
+        # SUBPACKAGE:WHERE_TO_COPY sfdisk:_mv_bin , need to strip based on : (
+        # util-linux )
         if (STATE_SUBPACK):
             # This entry handles entries after start and before end
             tmp = s.lstrip()
@@ -308,7 +307,7 @@ def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
             STATE_SECFIXES = False
             try:
                 secfixes = yaml.safe_load(secfixes_yaml)
-            except:
+            except BaseException:
                 print(name)
                 print(secfixes_yaml)
                 sys.exit(1)
@@ -329,7 +328,7 @@ def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
             new_key = new_key.replace('%.*', '')
             try:
                 major_minor_maint = var_map[new_key]
-            except:
+            except BaseException:
                 pass
             else:
                 tmp = major_minor_maint.split('.')
@@ -420,7 +419,8 @@ def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
                 if i_resolved.find(emap):
                     i_resolved = i_resolved.replace(emap, exp_var_map[key])
 
-            # Source that contains :// is external , download with curl , generic tyoe
+            # Source that contains :// is external , download with curl ,
+            # generic tyoe
 
             find_url = e_resolved.split('://')
             if len(find_url) == 2:
@@ -452,7 +452,8 @@ def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
                         prevent_duplicates[e_resolved] = e_resolved
             else:
                 if re.findall(r'.*?patch$', e_resolved):
-                    # Internal patch , remote url must be retrived with git , url, commit and path
+                    # Internal patch , remote url must be retrived with git ,
+                    # url, commit and path
                     tmp = {}
                     tmp['remote'] = {}
                     tmp['remote']['type'] = 'git'
@@ -466,7 +467,8 @@ def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
                         repository, name, i_resolved)
                     result['download']['internal']['patch'].append(tmp)
                 else:
-                    # Internal code , remote url must be retrived with git , url, commit and path
+                    # Internal code , remote url must be retrived with git ,
+                    # url, commit and path
                     tmp = {}
                     tmp['remote'] = {}
                     tmp['remote']['type'] = 'git'
@@ -486,7 +488,7 @@ def parse_apkbuild_manifest(name, repository, path,  repo_hash_dict):
 args_options = {
     'opt':
     [
-        {'long': '--debug',    'help': 'Debug mode'},
+        {'long': '--debug', 'help': 'Debug mode'},
     ],
     'opt_w_arg':
     [
@@ -528,7 +530,7 @@ def get_package_repo_from_bom(bom):
         else:
             repo_list = list(bom.keys())
             repos = bom
-    except:
+    except BaseException:
         return {}
     else:
         tmp = {}
@@ -552,7 +554,7 @@ def scan_aports(checkout_dir, apkindex):
 
     stats = {}
     stats['parse'] = {}
-    stats['parse']['errors'] = [] 
+    stats['parse']['errors'] = []
     repos = apkindex['repos']
     repo_hash_dict = get_package_repo_from_bom(repos)
     result = {}
@@ -563,8 +565,8 @@ def scan_aports(checkout_dir, apkindex):
             #print("Processing %s" % filename)
             length = len(comp)
             if length > 3:
-                repository = comp[length-3]
-                name = comp[length-2]
+                repository = comp[length - 3]
+                name = comp[length - 2]
                 if name not in result:
                     filename_commit = resolve_apkindex_file(
                         filename, repository, repo_hash_dict)
@@ -575,13 +577,14 @@ def scan_aports(checkout_dir, apkindex):
                         stats['parse'][name] = parse_info
                     if len(temp) > 0:
                         result[name] = temp
-                        if 'childs' in result[name]: 
-                          for child in result[name]['childs']:
-                            child_entry = {}
-                            child_entry['parent'] = name
-                            result[child] = child_entry
-                        else:  
-                            stats['parse']['errors'].append("Missing child %s" % name) 
+                        if 'childs' in result[name]:
+                            for child in result[name]['childs']:
+                                child_entry = {}
+                                child_entry['parent'] = name
+                                result[child] = child_entry
+                        else:
+                            stats['parse']['errors'].append(
+                                "Missing child %s" % name)
 
     stats['processed'] = cnt
     return result, stats
@@ -595,19 +598,20 @@ def main():
     result = {}
     root_dir = args.cache
     result = {}
-    result['map'], stats = scan_aports(args.checkout,apkindex) 
+    result['map'], stats = scan_aports(args.checkout, apkindex)
     result['stats'] = stats
     result_json = export_json(result)
     cache_index_file = "%s/APKINDEX-%s.json" % (args.cache, apkindex['hash'])
 
-    if len(result['map']) > 0: 
-      fp = open(cache_index_file, "w")
-      fp.write(result_json)
-      fp.close()
-      sys.exit(0) 
-    else: 
-      sys.stderr.write("Unable to create resolver database, is the repository cloned ?\n") 
-      sys.exit(1) 
+    if len(result['map']) > 0:
+        fp = open(cache_index_file, "w")
+        fp.write(result_json)
+        fp.close()
+        sys.exit(0)
+    else:
+        sys.stderr.write(
+            "Unable to create resolver database, is the repository cloned ?\n")
+        sys.exit(1)
 
 
 if __name__ == '__main__':

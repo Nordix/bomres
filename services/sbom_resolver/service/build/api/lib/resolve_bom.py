@@ -18,7 +18,7 @@ except ImportError:
 args_options = {
     'opt':
     [
-        {'long': '--debug',    'help': 'Debug mode'},
+        {'long': '--debug', 'help': 'Debug mode'},
     ],
     'opt_w_arg':
     [
@@ -57,7 +57,7 @@ def import_json(input_file):
         data = fp.read()
         fp.close()
         y = json.loads(data)
-    except:
+    except BaseException:
         return None
     else:
         return y
@@ -70,7 +70,7 @@ def import_json(input_file):
 def export_json(inp):
     io = StringIO()
     y = json.dump(inp, io, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=None, indent=4,
-                  separators=None,  default=None)
+                  separators=None, default=None)
     y = io.getvalue()
     return y
 
@@ -105,7 +105,7 @@ def mapper(comp_dict, alpine_dict, debug=False):
                 vendor = comp['pipeline']['vendor']
                 try:
                     parent = comp['pipeline']['aggregator']['alpine']['parent']
-                except:
+                except BaseException:
                     # Mismatch between os.bom and apkindex , this is bad
                     stats['miss'] = stats['miss'] + 1
                     stats['missing']['product'].append(prod)
@@ -161,11 +161,11 @@ def mapper(comp_dict, alpine_dict, debug=False):
                         if 'download' in alpine_dict['map'][prod]:
                             comp['aggregate']['source'] = alpine_dict['map'][prod]['download']
                         if 'security' in alpine_dict['map'][prod]:
-                            if 'info' not in comp['aggregate']: 
+                            if 'info' not in comp['aggregate']:
                                 comp['aggregate']['info'] = {}
                             comp['aggregate']['info']['secfixes'] = alpine_dict['map'][prod]['security']
                         if 'license' in alpine_dict['map'][prod]:
-                            if 'info' not in comp['aggregate']: 
+                            if 'info' not in comp['aggregate']:
                                 comp['aggregate']['info'] = {}
                             comp['aggregate']['info']['license'] = alpine_dict['map'][prod]['license']
                         if debug:
@@ -200,7 +200,7 @@ def main():
         comp_dict = import_json(args.packages)
         try:
             hash = comp_dict['metadata']['aggregator']['alpine']['apkindex']['hash']
-        except:
+        except BaseException:
             sys.stderr.write("Could not find any hash in %s" % args.packages)
             sys.exit(1)
 

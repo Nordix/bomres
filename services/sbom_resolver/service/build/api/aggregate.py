@@ -57,7 +57,7 @@ def debuginfo(comment):
         fp = open("/proc/version", "r")
         version = fp.read().replace('\n', '')
         fp.close()
-    except:
+    except BaseException:
         pass
     else:
         tmp['base'] = {}
@@ -105,7 +105,7 @@ def post(token_info, **kwargs):
                      (image, images[image].mimetype))
 
     image = 'config'
-    settings= ""
+    settings = ""
     TMP_FILE_NAME = "/tmp/config-%s-%s.bom" % (upn, flow_id)
     os_path = TMP_FILE_NAME
     if image in images:
@@ -119,7 +119,7 @@ def post(token_info, **kwargs):
     else:
         try:
             os.unlink(TMP_FILE_NAME)
-        except:
+        except BaseException:
             pass
 
     image = 'desired'
@@ -137,7 +137,7 @@ def post(token_info, **kwargs):
     else:
         try:
             os.unlink(TMP_FILE_NAME)
-        except:
+        except BaseException:
             pass
     image = 'resolved'
     TMP_FILE_NAME = "/tmp/os-%s-%s.bom" % (upn, flow_id)
@@ -151,7 +151,7 @@ def post(token_info, **kwargs):
         fp.close()
         try:
             os.unlink(os_path)
-        except:
+        except BaseException:
             pass
 
     image = 'pkgindex'
@@ -165,17 +165,18 @@ def post(token_info, **kwargs):
             fp = open(TMP_FILE_NAME, "rb")
             pkgindex = fp.read()
             fp.close()
-        except:
+        except BaseException:
             logger.debug("Problem parsing  %s\n" % TMP_FILE_NAME)
             logger.debug("Problem parsing  %s\n" % debug_info())
-            return connexion.problem(status=500, title=http.client.responses[500], detail=debug_info())
+            return connexion.problem(
+                status=500, title=http.client.responses[500], detail=debug_info())
         else:
             logger.debug("Parsing APKINDEX ok  \n")
 
         try:
             logger.debug("About to remove file %s\n" % TMP_FILE_NAME)
             os.unlink(TMP_FILE_NAME)
-        except:
+        except BaseException:
             logger.warning("Unable to remove temporary file %s" %
                            TMP_FILE_NAME)
 
@@ -185,5 +186,5 @@ def post(token_info, **kwargs):
         settings_dict = aggregate_bom.process_config(settings)
         alpine_apk_index = aggregate_bom.process_tarball(pkgindex)
         mdata = aggregate_bom.format_dep(
-            resolved, alpine_apk_index,  desired_list, settings_dict)
+            resolved, alpine_apk_index, desired_list, settings_dict)
         return mdata, 200
