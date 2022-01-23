@@ -5,7 +5,7 @@ metadata:
   labels:
    app: sbom-resolver
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: sbom-resolver
@@ -26,6 +26,8 @@ spec:
         volumeMounts:
         - name: bomresolver-cache
           mountPath: /mnt/alpine/cache
+        - name: bomresolver-src
+          mountPath: /tmp/alpine/src
         env:
         - name: APORTS_CACHE
           value: /mnt/alpine/cache
@@ -40,7 +42,16 @@ spec:
       - name: bomresolver-cache
         persistentVolumeClaim:
           claimName: bomresolver-storage-cache
+      - name: bomresolver-src
+        emptyDir: {} 
 
+      initContainers:
+      - name: clone
+        image: dr.t2data.com/resolver/sbom-resolver:1.0.13
+        command: ['/usr/bin/python3', '/usr/src/app/api/lib/git_manager.py','--cmd','clone','--dir','/tmp/alpine/src','--url','https://git.alpinelinux.org/aports']
+        volumeMounts:
+        - name: bomresolver-src
+          mountPath: /tmp/alpine/src
 
 
 ---
