@@ -112,7 +112,7 @@ def parse_description(buffer):
         result['build-number'] = bn
         commit_hash = buffer.split('-')[2]
         result['hash'] = commit_hash[1:]
-    except:
+    except BaseException:
         pass
     return result
 
@@ -181,7 +181,7 @@ def process_tarball(tarball, create_commit_map=False):
     try:
         hash_object = hashlib.md5(tarball)
         hex_dig = hash_object.hexdigest()
-    except:
+    except BaseException:
         hex_dig = "failed_to_calculate_hash"
 
     tmp = run(cmd)
@@ -202,7 +202,7 @@ def process_tarball(tarball, create_commit_map=False):
                 fp = open(filename, "r")
                 APKINDEX = fp.read()
                 fp.close()
-            except:
+            except BaseException:
                 result['status'] = 'error'
             else:
                 if tag not in result['apkindex']:
@@ -223,7 +223,7 @@ def process_tarball(tarball, create_commit_map=False):
                 fp = open(filename, "r")
                 DESCRIPTION = fp.read()
                 fp.close()
-            except:
+            except BaseException:
                 result['status'] = 'error'
             else:
                 if tag not in result['apkindex']:
@@ -249,19 +249,21 @@ def process_desired_bom(os_bom):
     for line in os_bom.split('\n'):
         fields = line.split()
         nr_of_fields = len(fields)
-        if nr_of_fields > 1 and fields[nr_of_fields-1][0] == "#" and fields[nr_of_fields-1][1] == "S":
+        if nr_of_fields > 1 and fields[nr_of_fields -
+                                       1][0] == "#" and fields[nr_of_fields - 1][1] == "S":
             strategic_component = fields[0]
             if strategic_component not in tmp:
                 tmp.append(strategic_component)
     return tmp
 
+
 def process_config(config):
 
-    tmp = {} 
+    tmp = {}
     for line in config.split('\n'):
         fld = line.split("=")
         if len(fld) == 2:
-           tmp[fld[0]] = fld[1].replace('"' ,"")
+            tmp[fld[0]] = fld[1].replace('"', "")
     return tmp
 
 
@@ -305,7 +307,7 @@ def process_resolved_bom(os_bom):
     return tmp, syntax
 
 
-def format_dep(bom,  metadata, desired, settings):
+def format_dep(bom, metadata, desired, settings):
 
     if 'apkindex' in metadata:
         apk_match = {}
@@ -455,10 +457,10 @@ def main():
                 alpine_apk_index = process_tarball(buf, create_commit_map=True)
             else:
                 alpine_apk_index = process_tarball(buf)
-        except:
+        except BaseException:
             sys.stderr.write("Error processing %s\n" % args.pkgindex)
             sys.exit(1)
-        if args.desired == None and args.resolved == None and args.output:
+        if args.desired is None and args.resolved is None and args.output:
             json = export_json(alpine_apk_index)
             fp = open(args.output, "w")
             fp.write(json)
@@ -470,7 +472,7 @@ def main():
             buf = fp.read()
             fp.close()
             desired = process_desired_bom(buf)
-        except:
+        except BaseException:
             sys.stderr.write("Error processing %s\n" % args.desired)
             sys.exit(1)
 
@@ -484,7 +486,7 @@ def main():
             buf = fp.read()
             fp.close()
             settings = process_config(buf)
-        except:
+        except BaseException:
             sys.stderr.write("Error processing %s\n" % args.config)
             sys.exit(1)
 
@@ -494,12 +496,17 @@ def main():
             buf = fp.read()
             fp.close()
             resolved, stats = process_resolved_bom(buf)
-        except:
+        except BaseException:
             sys.stderr.write("Error processing %s\n" % args.resolved)
             sys.exit(1)
 
     if args.output and args.resolved and args.desired and args.config:
-        json = export_json(format_dep(resolved, alpine_apk_index,  desired, settings))
+        json = export_json(
+            format_dep(
+                resolved,
+                alpine_apk_index,
+                desired,
+                settings))
         try:
             fp = open(args.output, "w")
             fp.write(json)

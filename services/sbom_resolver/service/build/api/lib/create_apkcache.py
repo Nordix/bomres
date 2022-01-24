@@ -13,11 +13,10 @@ import time
 import datetime
 
 
-try: 
-  import api.lib.git_manager as git_manager
-except: 
-  import git_manager as git_manager
-
+try:
+    import api.lib.git_manager as git_manager
+except BaseException:
+    import git_manager as git_manager
 
 
 try:
@@ -30,7 +29,6 @@ except ImportError:
 #
 
 
-
 #
 # JSON import
 #
@@ -40,7 +38,7 @@ def import_json(input_file):
         data = fp.read()
         fp.close()
         y = json.loads(data)
-    except:
+    except BaseException:
         return {}
     else:
         return y
@@ -86,15 +84,15 @@ def prepare_aports_cache(aport_dir, dst_cache_dir, repo, commit_hash):
     path = Path(dst_cache_dir)
     path.mkdir(parents=True, exist_ok=True)
 
-
-    for filename in glob.iglob("%s/%s" % (aport_dir, repo) + '**/**', recursive=True):
+    for filename in glob.iglob(
+            "%s/%s" % (aport_dir, repo) + '**/**', recursive=True):
         comp = filename.split('/')
         if 'APKBUILD' in comp:
             length = len(comp)
             if length > 3:
-                repository = comp[length-3]
-                name = comp[length-2]
-                pkg = comp[length-1]
+                repository = comp[length - 3]
+                name = comp[length - 2]
+                pkg = comp[length - 1]
                 dst_file = "%s/%s/%s/%s.%s" % (dst_cache_dir,
                                                repository, name, pkg, commit_hash)
                 dirname = os.path.dirname(dst_file)
@@ -103,7 +101,8 @@ def prepare_aports_cache(aport_dir, dst_cache_dir, repo, commit_hash):
                 shutil.copyfile(filename, dst_file)
 
 
-def create_cache(aports_src, pull_branch, aports_checkout, aports_cache , apkindex):
+def create_cache(aports_src, pull_branch,
+                 aports_checkout, aports_cache, apkindex):
     cache_index_file = "%s/APKINDEX-%s.json" % (
         aports_cache, apkindex['hash'])
     cache_path = Path(cache_index_file)
@@ -111,15 +110,20 @@ def create_cache(aports_src, pull_branch, aports_checkout, aports_cache , apkind
         return True, cache_index_file, None
     else:
         orm = git_manager.checkout(pull_branch, "%s/aports" % aports_src)
-        if orm['status'] == False: 
-          return False, cache_index_file, None
+        if orm['status'] == False:
+            return False, cache_index_file, None
 
-        git_manager.pull("%s/aports" % aports_src) 
+        git_manager.pull("%s/aports" % aports_src)
         aports_info = git_manager.info("%s/aports" % aports_src)
         for repo in apkindex['repos']:
-           commit_hash = apkindex['repos'][repo]['hash']
-           tmp = git_manager.checkout(commit_hash, "%s/aports" % aports_src)
-           prepare_aports_cache("%s/aports" % aports_src, aports_checkout, repo, commit_hash)
+            commit_hash = apkindex['repos'][repo]['hash']
+            tmp = git_manager.checkout(commit_hash, "%s/aports" % aports_src)
+            prepare_aports_cache(
+                "%s/aports" %
+                aports_src,
+                aports_checkout,
+                repo,
+                commit_hash)
         return False, cache_index_file, aports_info
 
 
@@ -128,20 +132,20 @@ def main():
     args = parse_cmdline()
 
     if args.branch:
-       pull_branch = args.branch
-    else: 
-       pull_branch = "master"
+        pull_branch = args.branch
+    else:
+        pull_branch = "master"
 
     apk_index_dict = import_json(args.apkindex)
 
-    entry_exists, cache_index_file , aports_info = create_cache(args.src, pull_branch, args.checkout , args.cache, apk_index_dict)
-
+    entry_exists, cache_index_file, aports_info = create_cache(
+        args.src, pull_branch, args.checkout, args.cache, apk_index_dict)
 
    # Dictionairy for parsing command line args and options.
 args_options = {
     'opt':
     [
-        {'long': '--debug',    'help': 'Debug mode'},
+        {'long': '--debug', 'help': 'Debug mode'},
     ],
     'opt_w_arg':
     [
@@ -176,7 +180,3 @@ def parse_cmdline():
 
 if __name__ == '__main__':
     main()
-
-
-
-

@@ -26,7 +26,6 @@ import json
 import traceback
 
 
-
 def post(token_info, **kwargs):
 
     with current_app.app_context():
@@ -39,38 +38,35 @@ def post(token_info, **kwargs):
     logger.debug("Serving POST " + request.path +
                  " with Connexion version: " + version + " x-api-id: " + xapiid)
 
-    if 'body' in kwargs and 'path' in kwargs['body'] and 'commit' in kwargs['body']: 
-      body = kwargs['body']
-      logger.debug(body)
+    if 'body' in kwargs and 'path' in kwargs['body'] and 'commit' in kwargs['body']:
+        body = kwargs['body']
+        logger.debug(body)
     else:
-      message="Bad indata"
-      logger.warning(message)
-      return connexion.problem(status=400, title='Parsing', detail=message)
-
+        message = "Bad indata"
+        logger.warning(message)
+        return connexion.problem(status=400, title='Parsing', detail=message)
 
     APORTS_SRC = os.getenv('APORTS_SRC', '/tmp/alpine/src')
-    path = "%s/aports/%s" % (APORTS_SRC,body['path'])
+    path = "%s/aports/%s" % (APORTS_SRC, body['path'])
 
-    # Assume that the repo is in the correct state 
+    # Assume that the repo is in the correct state
     try:
-      fp = open(path,"r")
-      buffer = fp.read()
-      fp.close()
-    except:
-      # If not found , checkout the requested commit state  
-      git_manager.checkout(body['commit'], "%s/aports" % APORTS_SRC)
-      try:
-        fp = open(path,"r")
+        fp = open(path, "r")
         buffer = fp.read()
         fp.close()
-      except:
-        message="Cannot find %s at commit state %s in repo %s" % ( body['path'], body['commit'], body['repository_id'])
-        logger.warning(message)
-        return connexion.problem(status=404, title='Not found', detail=message)
-    else: 
-      logger.debug("Found file, about to reply")
-      return Response(buffer, status=200, mimetype='text/plain')
-
-
-
-
+    except BaseException:
+        # If not found , checkout the requested commit state
+        git_manager.checkout(body['commit'], "%s/aports" % APORTS_SRC)
+        try:
+            fp = open(path, "r")
+            buffer = fp.read()
+            fp.close()
+        except BaseException:
+            message = "Cannot find %s at commit state %s in repo %s" % (
+                body['path'], body['commit'], body['repository_id'])
+            logger.warning(message)
+            return connexion.problem(
+                status=404, title='Not found', detail=message)
+    else:
+        logger.debug("Found file, about to reply")
+        return Response(buffer, status=200, mimetype='text/plain')
