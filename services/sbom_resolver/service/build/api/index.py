@@ -4,6 +4,7 @@ import sys
 import datetime
 import argparse
 import uuid
+import time
 import pprint
 import http
 import uuid
@@ -164,12 +165,27 @@ def post(token_info, **kwargs):
     apkindex = aggregate_bom.process_tarball(buff, create_commit_map=False)
 
     MAIN_BRANCH = os.getenv('MAIN_BRANCH', 'master')
-    entry_exists, cache_index_file, aports_info = create_apkcache.create_cache(
+    INDEX_MAX_TIME = int(os.getenv('INDEX_MAX_TIME', '60'))
+    entry_exists, cache_index_file, aports_info , age = create_apkcache.create_cache(
         APORTS_SRC, MAIN_BRANCH, APORTS_CHECKOUT, APORTS_CACHE, apkindex)
-    if entry_exists == True:
+    if entry_exists == True :
+       if age  == 0 :
         tmp_json = {}
         tmp_json['info'] = "Entry exists [%s]" % cache_index_file
         return tmp_json, 200
+       elif age <= INDEX_MAX_TIME: 
+        tmp_json = {}
+        tmp_json['info'] = "Index in progress INDEX_MAX_TIME %d seconds , elapsed time is %d seconds" % (INDEX_MAX_TIME,age)
+        return tmp_json, 202
+       else: 
+        logger.debug("INDEX_MAX_TIME  [%d] expired [%d]" % (INDEX_MAX_TIME,age))
+
+    result = {} 
+    result['started'] = int(time.time())
+    result_json = export_json(result)
+    fp = open(cache_index_file, "w")
+    fp.write(result_json)
+    fp.close()
 
     logger.debug("About to create %s" % cache_index_file)
     result = {}
@@ -186,4 +202,4 @@ def post(token_info, **kwargs):
     tmp['apkindex'] = apkindex['repos']
     tmp['aports'] = aports_info
     tmp['parse'] = stats
-    return tmp, 200
+    return tmp, 201
