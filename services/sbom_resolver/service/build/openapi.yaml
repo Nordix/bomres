@@ -32,32 +32,24 @@ info:
        $ make service & 
        $ make build  
     ```
-    <H2>Deployed as code</H2>
+    <H2>Deployed in Kubernetes</H2>
     ```json
-      docker run   --rm -it    dr.t2data.com/resolver/base_os_alpine:latest cat /opt/base_os/scripts/aggregate_bom.py
-      docker run   --rm -it    dr.t2data.com/resolver/base_os_alpine:latest cat /opt/base_os/scripts/bom.sh
-      find . -name APKINDEX.tar.gz | cut -c3- |  tar cf /sandbox/base_os/sbom/apkindex.tar -T -
-      python3 aggregate_bom.py  --pkgindex apkindex.tar    --desired packages   --config settings  --resolved os.bom   --output aggregated.json
+        sbom-resolver-7b56494ff6-7np59         1/1     Running   0          2d6h
+        sbom-resolver-7b56494ff6-7rhgq         1/1     Running   0          26h
+        sbom-resolver-7b56494ff6-v7h54         1/1     Running   0          2d6h
+        sbom-resolver-7b56494ff6-xbfgh         1/1     Running   0          55m
     ```
 
-    <H2>Deployed as three services in Kubernetes</H2>
-    Read the documentation in the source code repository how to deploy in a cluster.<br>
-    There is some performance issues with git and persistent volumes.
-    <ul>
-     <li>Token service with support for client grant and mTLS RFC8705 
-     <li>SBOM Facade, stateless deployment of CI/CD frontend 
-     <li>SBOM Alpine resolver 
-    </ul>
     
     <H1>References</H1>
     <ul>
-    <li><a href="https://fosdem.org/2022/">FossDem2022 Presentation Georg Kunz</a>
+    <li><a href="https://fosdem.org/2022/schedule/event/sbom_resolver_generating_detailed_sboms_for_alpine/">FossDem 22SBOM Resolver - Generating detailed SBOMs for Alpine</a>
     <li><a href="https://github.com/Nordix/bomres">Source Code</a>
     </ul>
 
 
-  version: "1.0.13"
-  x-api-id: 93656f6b-9736-46c7-b821-90137ef9feff
+  version: "1.0.14"
+  x-api-id: d3571587-2efd-4a6c-ab31-e7c1c9639843
   x-audience: public
   contact:
     name: Hans Thorsen Lamm 
@@ -548,7 +540,21 @@ paths:
                     example: APKINDEX.tar.gz 
       responses:
         200:
-          description: Repository cloned
+          description: Index already exists 
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+        201:
+          description: Index created 
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+        202:
+          description: Indexing in progress
           content:
             application/json:
               schema:

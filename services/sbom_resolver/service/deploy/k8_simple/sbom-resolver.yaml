@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: sbom-resolver
-        image: dr.t2data.com/resolver/sbom-resolver:1.0.13
+        image: dr.t2data.com/resolver/sbom-resolver:1.0.14
         volumeMounts:
         - name: bomresolver-cache
           mountPath: /mnt/alpine/cache
