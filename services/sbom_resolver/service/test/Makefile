@@ -1,16 +1,16 @@
 
 
-CLIENT_ID=iota_bss_api_gateway
+CLIENT_ID=product
 CLIENT_SECRET=qwerty
 
 TOKEN_URL=https://lb.t2data.com/resolver/alpine/v1
-TOKEN_URL=https://lb.t2data.com/token/v1
+TOKEN_URL=http://localhost:8080/resolver/alpine/v1
 
-URL=http://localhost:8080
 URL=https://lb.t2data.com
+URL=http://localhost:8080
 
 TOOLS_REPO      = dr.t2data.com/resolver
-ALPINE_BUILDER  = base_os_alpine:3.15.12
+ALPINE_BUILDER  = base_os_alpine:latest
 BASE_OS_IMAGE   = $(TOOLS_REPO)/$(ALPINE_BUILDER)
 
 include ../build/config/settings

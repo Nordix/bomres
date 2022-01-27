@@ -103,15 +103,21 @@ def prepare_aports_cache(aport_dir, dst_cache_dir, repo, commit_hash):
 
 def create_cache(aports_src, pull_branch,
                  aports_checkout, aports_cache, apkindex):
+    age = 0 
     cache_index_file = "%s/APKINDEX-%s.json" % (
         aports_cache, apkindex['hash'])
     cache_path = Path(cache_index_file)
     if cache_path.exists():
-        return True, cache_index_file, None
+        check_age = import_json(cache_index_file) 
+        if 'started' in check_age: 
+           now = int(time.time()) 
+           started = int(check_age['started'])
+           age = now - started 
+        return True, cache_index_file, None, age
     else:
         orm = git_manager.checkout(pull_branch, "%s/aports" % aports_src)
         if orm['status'] == False:
-            return False, cache_index_file, None
+            return False, cache_index_file, None, age 
 
         git_manager.pull("%s/aports" % aports_src)
         aports_info = git_manager.info("%s/aports" % aports_src)
@@ -124,7 +130,7 @@ def create_cache(aports_src, pull_branch,
                 aports_checkout,
                 repo,
                 commit_hash)
-        return False, cache_index_file, aports_info
+        return False, cache_index_file, aports_info, age 
 
 
 def main():
