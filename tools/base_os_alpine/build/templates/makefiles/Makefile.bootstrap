@@ -1,6 +1,6 @@
 
 
-BASE_OS_IMAGE   = dr.t2data.com/resolver/base_os_alpine:latest
+BASE_OS_IMAGE   = docker.io/hansthorsenlamm/base_os_alpine
 RESOLVER_IMAGE  = dr.t2data.com/resolver/sbom-resolver:latest
 
 DIR=alpine

@@ -1,5 +1,5 @@
-REGISTRY ?= dr.t2data.com
-REPOSITORY ?= resolver
+REGISTRY ?= docker.io
+REPOSITORY ?= hansthorsenlamm
 
 include build/config/settings
 
