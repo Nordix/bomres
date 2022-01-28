@@ -65,7 +65,6 @@ public_build:  $(PAYLOAD_CONTAINER_FILE)
 	docker run --rm $(BUILDER_IMAGE) -a $(ARCH)  -b -s -t UTC -r v$(ALPINE_VERSION) -m $(REPO_URL)  -p $(PACKAGE_LIST)   > $(BUILD_DIR)/rootfs.tar.gz
 	cd $(BUILD_DIR) && docker build -t $(CONTAINER_IMAGE) -f Containerfile .
 	docker run --rm -i  --name alpine$(ALPINE_VERSION) $(CONTAINER_IMAGE)  /bin/sh -c 'apk info -v 2> /dev/null' > sbom/os.apk
-	dos2unix sbom/os.apk
 
 private_build:  $(PAYLOAD_CONTAINER_FILE)
 	docker run -v "$$PWD/download/alpine/:/download"  --rm $(BUILDER_IMAGE)  -a  $(ARCH)  -b -s -t UTC -r v$(ALPINE_VERSION) -m /download -p $(PACKAGE_LIST)   > $(BUILD_DIR)/rootfs.tar.gz
