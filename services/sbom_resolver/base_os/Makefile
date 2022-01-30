@@ -1,5 +1,5 @@
 
-BASE_OS_IMAGE   = dr.t2data.com/resolver/base_os_alpine:3.15.12
+BASE_OS_IMAGE   = docker.io/bomres/base_os_alpine
 
 
 prepare: 
@@ -19,6 +19,7 @@ deploy:
 	@make -C deploy deploy  REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY)
 
 
+# Be careful , git clean -fd -fx 
 clean: 
 	( cd build/base_os   && git clean -fd -fx  )	
 

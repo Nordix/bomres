@@ -1,5 +1,5 @@
 REGISTRY ?= docker.io
-REPOSITORY ?= hansthorsenlamm
+REPOSITORY ?= bomres
 
 include build/config/settings
 
