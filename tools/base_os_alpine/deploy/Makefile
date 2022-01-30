@@ -2,7 +2,7 @@ DIR ?=build
 
 
 REGISTRY=docker.io
-REPOSITORY=hansthorsenlamm
+REPOSITORY=bomres
 
 
 include  ../$(DIR)/config/settings

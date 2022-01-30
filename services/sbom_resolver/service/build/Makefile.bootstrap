@@ -1,7 +1,7 @@
 
 
-BASE_OS_IMAGE   = dr.t2data.com/resolver/base_os_alpine
-RESOLVER_IMAGE  = dr.t2data.com/resolver/sbom-resolver
+BASE_OS_IMAGE   = docker.io/bomres/base_os_alpine
+RESOLVER_IMAGE  = docker.io/bomres/alpine_resolver
 
 DIR=alpine
 TEMPDIR=/tmp/alpine
