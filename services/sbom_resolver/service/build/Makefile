@@ -1,21 +1,14 @@
-include ../../middleware/build/config/settings
-
+include ../../base_os/build/base_os/config/settings
 include config/settings
 
-
-MW_IMAGE=$(MIDDLEWARE_IMAGE):$(MIDDLEWARE_VERSION)
-
-
+BASE_OS=$(BASE_OS_IMAGE):$(BASE_OS_VERSION) 
 CONTAINER_IMAGE = $(SERVICE_IMAGE):$(SERVICE_VERSION)
-
 
 mock:
 	connexion run openapi.yaml --stub --debug
 
-
 build:
-	docker build -t  $(CONTAINER_IMAGE) --build-arg MW_IMAGE=$(MW_IMAGE)  -f Containerfile .
-
+	docker build -t  $(CONTAINER_IMAGE) --build-arg IMAGE=$(BASE_OS)  -f Containerfile .
 
 
 OPTIONS=  -v  /tmp/alpine/src:/mnt/alpine/src

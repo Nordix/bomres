@@ -9,7 +9,7 @@ import http
 import uuid
 import encodings
 import codecs
-import api.lib.git_manager as git_manager
+import bomres.lib.git_manager as git_manager
 
 
 import connexion

@@ -8,6 +8,8 @@ import argparse
 import shutil
 from pathlib import Path
 
+import bomres.lib.git_manager as git_manager
+
 
 # python3 get_file_git.py  --src /tmp/alpine/src --resolved
 # /tmp/resolved.json  --output internal  --debug --mode internal
@@ -37,12 +39,6 @@ def import_json(input_file):
         return {}
     else:
         return y
-
-
-try:
-    import api.lib.git_manager as git_manager
-except BaseException:
-    import git_manager as git_manager
 
 
 ALPINE_REPO_NAME = "aports"
