@@ -14,9 +14,9 @@ import datetime
 
 
 try:
-    import api.lib.git_manager as git_manager
+    import bomres.api.lib.git_manager as git_manager
 except BaseException:
-    import git_manager as git_manager
+    import api.lib.git_manager as git_manager
 
 
 try:
@@ -144,7 +144,7 @@ def main():
 
     apk_index_dict = import_json(args.apkindex)
 
-    entry_exists, cache_index_file, aports_info , age = create_cache(
+    entry_exists, cache_index_file, aports_info = create_cache(
         args.src, pull_branch, args.checkout, args.cache, apk_index_dict)
 
    # Dictionairy for parsing command line args and options.
