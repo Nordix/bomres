@@ -1,5 +1,5 @@
-ARG MW_IMAGE
-FROM ${MW_IMAGE}
+ARG IMAGE
+FROM ${IMAGE}
 
 LABEL org.opencontainers.image.title="SBOM Resolver"
 LABEL org.opencontainers.image.created="2022-01-17"
@@ -7,29 +7,20 @@ LABEL org.opencontainers.image.revision="A"
 LABEL org.opencontainers.image.vendor="Ericsson"
 LABEL org.opencontainers.image.authors=hans.thorsen@ericsson.com
 
-
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-
-
-COPY app.py /usr/src/app
-COPY api /usr/src/app/api
-
-
-COPY openapi.yaml /usr/src/app
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 COPY Makefile.bootstrap /Makefile.bootstrap
-COPY  entrypoint.sh /entrypoint.sh
-RUN   chmod u+x,g+x /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 
-RUN openssl genrsa -out priv.pem 1024
-RUN openssl rsa -in priv.pem -pubout > pub.pem
+COPY pkg /src
+RUN pip3 install /src; \
+    chmod u+x,g+x /entrypoint.sh; \
+    openssl genrsa -out priv.pem 1024; \
+    openssl rsa -in priv.pem -pubout > pub.pem; \
+    rm -rf /src
 
 EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
 
 CMD [ "server"]
-
-
-
