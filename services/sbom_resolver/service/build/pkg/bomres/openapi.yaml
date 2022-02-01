@@ -21,14 +21,16 @@ info:
     <H2>Resolver as a containerized tool</H3>
     
     ```json
-
-       $ docker run dr.t2data.com/resolver/base_os_alpine make > Makefile 
+       $ docker run docker.io/bomres/base_os_alpine make > Makefile
+       $ make config
+       $ vim alpine/build/base_os/config/packages
+       $ vim alpine/build/base_os/config/settings
        $ make build
        $ make resolve
     ```
     <H2>Deployed as a local service</H2>
     ```json
-       $ docker run dr.t2data.com/resolver/sbom-resolver make > Makefile 
+       $ docker run docker.io/bomres/alpine_resolver make > Makefile
        $ make service & 
        $ make build  
     ```
@@ -48,7 +50,7 @@ info:
     </ul>
 
 
-  version: "1.0.14"
+  version: "1.0.15"
   x-api-id: d3571587-2efd-4a6c-ab31-e7c1c9639843
   x-audience: public
   contact:
@@ -703,12 +705,12 @@ components:
     Accept:
       in: header
       name: accept
-      example: applications/csv
+      example: applications/json
       required: false
       schema:
         type: string
       description: |
-        Generate template for import to EVMS if applications/csv is specified
+        Resource model for git repository
 
   schemas:
 
@@ -802,8 +804,7 @@ components:
 
     token:
       description: | 
-                  This schema violates the linter since it is not used directly.<br> 
-                  The token is specified as a parameter and passed as a header encoded as base64.<br>
+                  The token is specified as a parameter and base64 encoded.<br>
       required:
         - jti
         - upn

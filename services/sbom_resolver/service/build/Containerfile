@@ -12,8 +12,7 @@ ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 COPY Makefile.bootstrap /Makefile.bootstrap
 COPY entrypoint.sh /entrypoint.sh
 
-#RUN mkdir -p /src
-COPY resolver /src
+COPY pkg /src
 RUN pip3 install /src; \
     chmod u+x,g+x /entrypoint.sh; \
     openssl genrsa -out priv.pem 1024; \

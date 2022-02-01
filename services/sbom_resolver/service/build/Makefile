@@ -1,9 +1,6 @@
-#include ../../middleware/build/config/settings
 include ../../base_os/build/base_os/config/settings
 include config/settings
 
-
-#MW_IMAGE=$(MIDDLEWARE_IMAGE):$(MIDDLEWARE_VERSION)
 BASE_OS=$(BASE_OS_IMAGE):$(BASE_OS_VERSION) 
 CONTAINER_IMAGE = $(SERVICE_IMAGE):$(SERVICE_VERSION)
 
