@@ -12,7 +12,6 @@ from flask_cors import CORS
 import jwt
 import logging
 import logging.config
-import pkg_resources
 
 
 from yaml import Loader, Dumper
@@ -81,7 +80,7 @@ def main():
     logging.config.dictConfig(logging_config)
     logger = logging.getLogger()
 
-    openapi_spec = pkg_resources.resource_stream(__name__, 'openapi.yaml')
+    openapi_spec = "openapi.yaml"
     xapi_id, title, server_url = load_openapi(openapi_spec)
     if xapi_id is None:
         sys.stderr.write("Could not extract x-api-id from %s\n" % openapi_spec)
