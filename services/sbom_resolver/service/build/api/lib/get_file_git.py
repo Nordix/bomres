@@ -40,9 +40,9 @@ def import_json(input_file):
 
 
 try:
-    import bomres.api.lib.git_manager as git_manager
-except BaseException:
     import api.lib.git_manager as git_manager
+except BaseException:
+    import git_manager as git_manager
 
 
 ALPINE_REPO_NAME = "aports"
