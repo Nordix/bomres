@@ -1,3 +1,0 @@
-# These settings are used by both bash and make, no trailing space after assignment 
-MIDDLEWARE_IMAGE=middleware_resolver
-MIDDLEWARE_VERSION=1.0.12
