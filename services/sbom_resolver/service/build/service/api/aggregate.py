@@ -24,7 +24,7 @@ from flask import current_app
 import jwt
 import json
 
-import api.lib.aggregate_bom as aggregate_bom
+import bomres.lib.aggregate_bom as aggregate_bom
 
 
 #

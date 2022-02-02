@@ -26,7 +26,7 @@ import traceback
 from pathlib import Path
 
 
-import api.lib.resolve_bom as resolve_bom
+import bomres.lib.resolve_bom as resolve_bom
 
 
 #

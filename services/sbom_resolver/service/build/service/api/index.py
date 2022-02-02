@@ -28,10 +28,10 @@ import json
 import traceback
 
 
-import api.lib.create_apkcache as create_apkcache
-import api.lib.parse_apkbuild as parse_apkbuild
-import api.lib.aggregate_bom as aggregate_bom
-import api.lib.git_manager as git_manager
+import bomres.lib.create_apkcache as create_apkcache
+import bomres.lib.parse_apkbuild as parse_apkbuild
+import bomres.lib.aggregate_bom as aggregate_bom
+import bomres.lib.git_manager as git_manager
 
 
 try:
