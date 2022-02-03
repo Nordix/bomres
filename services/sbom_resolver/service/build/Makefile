@@ -5,7 +5,7 @@ BASE_OS=$(BASE_OS_IMAGE):$(BASE_OS_VERSION)
 CONTAINER_IMAGE = $(SERVICE_IMAGE):$(SERVICE_VERSION)
 
 mock:
-	connexion run openapi.yaml --stub --debug
+	connexion run service/openapi.yaml --stub --debug
 
 build:
 	docker build -t  $(CONTAINER_IMAGE) --build-arg IMAGE=$(BASE_OS)  -f Containerfile .
@@ -29,6 +29,8 @@ python:
 
 run:
 	docker run -i -t  $(OPTIONS)  $(CONTAINER_IMAGE) server
+sh:
+	docker run -i -t  $(OPTIONS)  $(CONTAINER_IMAGE) sh
 
 clean: 
 	@rm -f *.pem *.jwk
