@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: sbom-resolver
-        image: docker.io/bomres/alpine_resolver:1.0.15
+        image: docker.io/bomres/alpine_resolver:1.0.17
         volumeMounts:
         - name: bomresolver-cache
           mountPath: /mnt/alpine/cache
@@ -47,8 +47,8 @@ spec:
 
       initContainers:
       - name: clone
-        image: docker.io/bomres/alpine_resolver:1.0.15
-        command: ['/usr/bin/python3', '/usr/src/app/api/lib/git_manager.py','--cmd','clone','--dir','/tmp/alpine/src','--url','https://git.alpinelinux.org/aports']
+        image: docker.io/bomres/alpine_resolver:1.0.17
+        command: ['sbom-resolver-git_manager','--cmd','clone','--dir','/tmp/alpine/src','--url','https://git.alpinelinux.org/aports']
         volumeMounts:
         - name: bomresolver-src
           mountPath: /tmp/alpine/src
