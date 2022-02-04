@@ -38,7 +38,9 @@ More detailed documentation on how to deploy each scenario to come soon.
 
 ### Prerequisities
 
-It is recommended to install rootless docker, otherwise the following example must be run as root.
+It is recommended to install rootless docker, otherwise the examples in this section must be run as root.
+
+Install rootless docker as follows:
 
 ```bash
 $ sudo curl -fsSL https://get.docker.com/rootless | sh
