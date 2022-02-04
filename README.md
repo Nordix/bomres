@@ -36,6 +36,14 @@ More detailed documentation on how to deploy each scenario to come soon.
 
 ## Usage
 
+### Prerequisities
+
+It is recommended to install rootless docker, otherwise the following example must be run as root.
+
+```bash
+$ sudo curl -fsSL https://get.docker.com/rootless | sh
+```
+
 ### Containerized tool
 
 To run bomres as a containerized toolset, perform the following steps:
