@@ -1,0 +1,10 @@
+suite: test persistent volume claim
+templates:
+  - pvc.yaml
+tests:
+  - it: should not render pvc by default
+    release:
+      name: testing
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -1,0 +1,19 @@
+suite: test deployment
+templates:
+  - deployment.yaml
+tests:
+  - it: should render volume with emptyDir by default
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].emptyDir
+          value: {}
+
+  - it: should render volume with persistent volume claim
+    release:
+      name: testing
+    set:
+      bomres.persistence.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: testing-sbom-resolver-cache
