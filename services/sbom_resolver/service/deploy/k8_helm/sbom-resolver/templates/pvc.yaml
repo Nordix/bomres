@@ -1,0 +1,15 @@
+{{ if .Values.bomres.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sbom-resolver.fullname" . }}-cache
+  namespace: {{ .Release.Namespace }}
+spec:
+  storageClassName: {{ .Values.bomres.persistence.storageClass | quote }}
+  accessModes:
+    - {{ .Values.bomres.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.bomres.persistence.size }}
+{{- end }}

@@ -1,0 +1,79 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sbom-resolver.fullname" . }}
+  labels:
+    {{- include "sbom-resolver.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "sbom-resolver.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "sbom-resolver.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "sbom-resolver.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: {{ include "sbom-resolver.fullname" . }}-cache
+          {{ if .Values.bomres.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "sbom-resolver.fullname" . }}-cache
+          {{ else }}
+          emptyDir: {}
+          {{- end }}
+      initContainers:
+        - name: clone
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command: ['sbom-resolver-git_manager','--cmd','clone','--dir','/tmp/alpine/src','--url','https://git.alpinelinux.org/aports']
+          volumeMounts:
+            - name: {{ include "sbom-resolver.fullname" . }}-cache
+              mountPath: /tmp/alpine/src
+      containers:
+        - name: bomres
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: APORTS_SRC
+              value: /mnt/alpine/src
+            - name: APORTS_CHECKOUT
+              value: /mnt/alpine/checkout
+            - name: APORTS_CACHE
+              value: /mnt/alpine/cache
+          volumeMounts:
+            - name: {{ include "sbom-resolver.fullname" . }}-cache
+              mountPath: /mnt/alpine/cache
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
