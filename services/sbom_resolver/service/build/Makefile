@@ -10,6 +10,9 @@ mock:
 build:
 	docker build -t  $(CONTAINER_IMAGE) --build-arg IMAGE=$(BASE_OS)  -f Containerfile .
 
+pip: 
+	( cd bomres && pip3 install . ) 
+
 
 OPTIONS=  -v  /tmp/alpine/src:/mnt/alpine/src
 OPTIONS+= -v  /tmp/alpine/checkout:/mnt/alpine/checkout
@@ -25,7 +28,7 @@ python:
 	@mkdir -p /tmp/alpine/src
 	@mkdir -p /tmp/alpine/checkout
 	@mkdir -p /tmp/alpine/cache
-	python3 app.py
+	( cd service && python3 app.py ) 
 
 run:
 	docker run -i -t  $(OPTIONS)  $(CONTAINER_IMAGE) server

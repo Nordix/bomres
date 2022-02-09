@@ -72,9 +72,46 @@ tags:
     description: Resolve dependencies for bom 
   - name: Authentication  
     description: Endpoint for accesstoken 
+  - name: Monitoring  
+    description: Integration with Kubernetes 
 
 
 paths: 
+  /liveness:
+    get:
+      tags:
+        - Monitoring
+      summary:
+        Indicates if services is alive
+      description: |
+          Simple check that service is deployed and alive. 
+      responses: 
+        '200': 
+           description: Response from HealthCheck
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/Health'
+
+
+  /readyness:
+    get:
+      tags:
+        - Monitoring
+      summary:
+        Indicates if services is ready to serve requests
+      description: |
+          Checks internal state of service  
+      responses: 
+        '200': 
+           description: Response from HealthCheck
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/Health'
+
+
+
   /token:
     parameters:
       - $ref: '#/components/parameters/Accept'
@@ -713,6 +750,14 @@ components:
         Resource model for git repository
 
   schemas:
+
+    Health: 
+      type: object
+      properties: 
+        statusCode: 
+          type: integer
+        additionalInformation:
+          type: string
 
     Retrieve:
       type: object
