@@ -79,12 +79,10 @@ bomres is current in early stages and primarily meant to demonstate the concept.
 
 ### Building from source
 
-To build the alpine image builder and the sbom-resolver container, run the following steps:
+To build the alpine image builder and the sbom-resolver container, run the command below:
 
 ```bash
-$ cd bomres
-$ make -C tools/base_os_alpine local
-$ make -C services/sbom_resolver build
+$ make all
 ```
 
 ### Testing a source build
