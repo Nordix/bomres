@@ -53,6 +53,20 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /resolver/alpine/v1/liveness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 4
+          readinessProbe:
+            httpGet:
+              path: /resolver/alpine/v1/readyness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 1
           env:
             - name: APORTS_SRC
               value: /mnt/alpine/src
