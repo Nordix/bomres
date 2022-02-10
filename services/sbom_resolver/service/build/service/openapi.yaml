@@ -50,9 +50,9 @@ info:
     </ul>
 
 
-  version: "1.0.15"
+  version: "1.0.18"
   x-api-id: d3571587-2efd-4a6c-ab31-e7c1c9639843
-  x-audience: public
+  x-audience: external-public
   contact:
     name: Hans Thorsen Lamm 
     email: hans.thorsen@ericsson.com
@@ -87,7 +87,13 @@ paths:
           Simple check that service is deployed and alive. 
       responses: 
         '200': 
-           description: Response from HealthCheck
+           description: Sucess response from HealthCheck
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/Health'
+        '500': 
+           description: Error response from HealthCheck
            content:
              application/json:
                schema:
@@ -104,7 +110,13 @@ paths:
           Checks internal state of service  
       responses: 
         '200': 
-           description: Response from HealthCheck
+           description: Success response from HealthCheck
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/Health'
+        '500': 
+           description: Error response from HealthCheck
            content:
              application/json:
                schema:
@@ -120,8 +132,8 @@ paths:
     post:
       tags:
         - Auth
-      summary: 'Retrieve JSON Web Token (JWT)'
-      description: ""
+      summary: 'JSON Web Token (JWT)'
+      description: "Authentication stub, should not be used in production "
       requestBody:
         description: 'Request body'
         required: true
@@ -196,7 +208,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Retrieve'
       responses:
-        200:
+        '200':
           description: PlantUML sequence diagram 
           headers:
             X-Ratelimit-Limit:
@@ -263,7 +275,7 @@ paths:
                     format: binary
                     example: git://git.alpinelinux.org/aports
       responses:
-        200:
+        '200':
           description: Repository cloned  
           content:
             application/json:
@@ -289,7 +301,7 @@ paths:
       description: |
         Return a list of all clones  
       responses:
-        200:
+        '200':
           description: Repository cloned  
           content:
             application/json:
@@ -321,7 +333,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/aport_uuid'
       responses:
-        200:
+        '200':
           description: PlantUML sequence diagram 
           headers:
             X-Ratelimit-Limit:
@@ -348,7 +360,7 @@ paths:
               schema:
                 type: string
                 format: binary
-        400:
+        '400':
           description: Input file not parsable
           content:
             application/problem+json:
@@ -578,21 +590,21 @@ paths:
                     format: binary
                     example: APKINDEX.tar.gz 
       responses:
-        200:
+        '200':
           description: Index already exists 
           content:
             application/json:
               schema:
                 type: string
                 format: binary
-        201:
+        '201':
           description: Index created 
           content:
             application/json:
               schema:
                 type: string
                 format: binary
-        202:
+        '202':
           description: Indexing in progress
           content:
             application/json:
@@ -634,7 +646,7 @@ paths:
                schema:
                  $ref: "#/components/schemas/Problem"
 
-        "200":
+        '200':
           description: "Succesfull conversion to SBOM Format"
           headers:
             X-Ratelimit-Limit:
@@ -685,7 +697,7 @@ paths:
                     format: binary
                     example: bom.json 
       responses:
-        200:
+        '200':
           description: Repository cloned
           content:
             application/json:
