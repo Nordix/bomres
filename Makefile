@@ -29,6 +29,10 @@ push_bom_resolver:
 	make -C services/sbom_resolver/service/deploy tag  REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY)
 	make -C services/sbom_resolver/service/deploy push REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY)
 
+push_robot_test: 
+	make -C tools/robot/service/deploy tag  REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY) 
+	make -C tools/robot/service/deploy push  REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY) 
+
 #  Deploy on development k8 cluster 
 
 deploy: 

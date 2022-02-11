@@ -1,0 +1,25 @@
+ARG IMAGE
+FROM ${IMAGE}
+
+LABEL org.opencontainers.image.title="Alpine Robot test"
+LABEL org.opencontainers.image.created="2022-02-11"
+LABEL org.opencontainers.image.revision="A"
+LABEL org.opencontainers.image.vendor="Ericsson"
+LABEL org.opencontainers.image.authors=hans.thorsen@ericsson.com
+
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
+COPY entrypoint.sh /entrypoint.sh
+
+COPY requirements.txt  /
+RUN pip3 install --no-cache-dir -r requirements.txt
+RUN mkdir -p /opt/robot
+WORKDIR /opt/robot
+
+
+RUN chmod u+x,g+x /entrypoint.sh
+
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD [ "server"]
