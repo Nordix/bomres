@@ -1,0 +1,2 @@
+SERVICE_IMAGE=alpine_robot
+SERVICE_VERSION=1.0.1
