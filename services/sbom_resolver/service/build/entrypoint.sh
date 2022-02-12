@@ -61,10 +61,13 @@ elif [ "$1" = 'help' ]; then
    echo "clone   :  Clone Alpine aports repository to local directory"
    echo "        :  Specify alternative path, default is https://git.alpinelinux.org/aports"
    echo "index   :  Create metadata needed for faster resolve "
-   echo "server  :  Listen on port 8080 for HTTP requests"
+   echo "server  :  Listen on port 8080 for HTTP requests , singlethread"
+   echo "uwsgi   :  Listen on port 8080 for HTTP requests , multithread"
    echo ""
 elif [ "$1" = 'server' ]; then
    exec python3 app.py
+elif [ "$1" = 'uwsgi' ]; then
+   exec uwsgi --socket 0.0.0.0:8080 --protocol=http --wsgi-file wsgi.py --master --processes 4 --threads 2
 else
     exec "$@"
 fi
