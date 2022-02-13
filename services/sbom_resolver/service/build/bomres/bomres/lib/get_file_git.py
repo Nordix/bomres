@@ -60,7 +60,7 @@ args_options = {
          'meta': 'resolved', 'required': True},
         {'long': '--mode', 'help': 'internal, external or all dependencies',
          'meta': 'mode', 'required': False},
-        {'long': '--type', 'help': 'retrieve code or patch',
+        {'long': '--type', 'help': 'retrieve code, patch or build (APKBUILD)',
          'meta': 'type', 'required': False},
         {'long': '--output', 'help': 'Output directory',
          'meta': 'output', 'required': True}
@@ -85,9 +85,13 @@ def parse_cmdline():
 
 def get_internal_code(sbom, srcdir, dstdir, mode, src_type, debug):
 
+    if debug: 
+       sys.stdout.write("get_internal_code\n") 
     # Different repos have different repository states
     for repo in sbom['metadata']['aggregator']['alpine']['aports']['repo']:
         # There might be repos with no packages
+        if debug: 
+           sys.stdout.write("repo: %s\n" % repo) 
         if 'source' in sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]:
             source = sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]['source']
             hash = sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]['hash']
@@ -99,7 +103,12 @@ def get_internal_code(sbom, srcdir, dstdir, mode, src_type, debug):
                 if 'aggregate' in sbom['dependencies'][index] and 'source' in sbom['dependencies'][index][
                         'aggregate'] and 'internal' in sbom['dependencies'][index]['aggregate']['source']:
                     src = sbom['dependencies'][index]['aggregate']['source']['internal']
+                    if debug: 
+                      sys.stdout.write("src_type: %s\n" % src_type) 
+
                     if src_type in ['all', 'code']:
+                        if debug: 
+                           sys.stdout.write("source: %s\n" % package['package']) 
                         for code in src['code']:
                             hash = code['remote']['commit']['hash']
                             path = code['remote']['path']
@@ -138,6 +147,27 @@ def get_internal_code(sbom, srcdir, dstdir, mode, src_type, debug):
                                 if debug:
                                     sys.stdout.write(
                                         "Internal patch copied: %s\n" % dstpath)
+
+                    if src_type in ['all', 'build']:
+                      src = sbom['dependencies'][index]['aggregate']['source']['internal']['build']
+                      if len(src) != 0:
+                        hash = src['remote']['commit']['hash']
+                        path = src['remote']['path']
+                        dstpath = dstdir + "/" + path
+                        srcpath = srcdir + "/" + ALPINE_REPO_NAME + "/" + path
+                        directory = os.path.dirname(dstpath)
+                        dirpath = Path(directory)
+                        dirpath.mkdir(parents=True, exist_ok=True)
+                        try:
+                            shutil.copyfile(srcpath, dstpath)
+                        except BaseException:
+                            sys.stderr.write(
+                               "    **********Problem with component [%s] See TODO.txt\n" %
+                               package['package'])
+                        else:
+                            if debug:
+                               sys.stdout.write(
+                                  "APKBUILD copied: %s\n" % dstpath)
 
 
 def get_external_code(sbom, srcdir, dstdir, mode, src_type, debug):
@@ -240,12 +270,12 @@ def create_commit_map(resolved_sbom):
 def main():
 
     args = parse_cmdline()
+    mode = "internal"
+    src_type = "all"
 
-    print(args)
     if args.pull:
         git_manager.pull("%s/%s" % (args.src, ALPINE_REPO_NAME))
 
-    mode = "internal"
     if args.mode:
         if args.mode in ['internal', 'external', 'all']:
             mode = args.mode
@@ -253,10 +283,9 @@ def main():
             sys.stderr.write("mode value is wrong\n")
             sys.exit(1)
 
-    src_type = "all"
     if args.type:
-        if args.type in ['code', 'patch', 'all']:
-            src_type = args.mode
+        if args.type in ['build', 'code', 'patch', 'all']:
+            src_type = args.type
         else:
             sys.stderr.write("type value is wrong\n")
             sys.exit(1)
@@ -275,15 +304,17 @@ def main():
             resolved_sbom = create_commit_map(resolved_sbom)
 
     if args.debug:
-        sys.stdout.write("mode: %s\n" % mode)
+        sys.stdout.write("mode: [internal|external|all]: %s\n" % mode)
+        sys.stdout.write("type: [code|patch|build|all]:  %s\n" % src_type)
         sys.stdout.write("tag: %s\n" % tag)
-        sys.stdout.write("type: %s\n" % src_type)
 
     dstdir = args.output + "/" + tag + "." + arch
     path = Path(dstdir)
     path.mkdir(parents=True, exist_ok=True)
 
     if mode in ['all']:
+        if args.debug:
+           sys.stdout.write("mode: all\n")
         get_internal_code(
             resolved_sbom,
             args.src,
@@ -299,6 +330,8 @@ def main():
             src_type,
             args.debug)
     elif mode in ['internal']:
+        if args.debug:
+           sys.stdout.write("mode: internal\n")
         get_internal_code(
             resolved_sbom,
             args.src,
@@ -307,6 +340,8 @@ def main():
             src_type,
             args.debug)
     elif mode in ['external']:
+        if args.debug:
+           sys.stdout.write("mode: external\n")
         get_external_code(
             resolved_sbom,
             args.src,

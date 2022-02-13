@@ -90,8 +90,17 @@ rest_aggregate:
 
 
 python_aggregate:
-	python3  ../build/api/lib/aggregate_bom.py  --pkgindex $(PWD)/$(DIR)/build/base_os/sbom/apkindex.tar    --desired $(PWD)/$(DIR)/build/base_os/sbom/os.conf  \
+	python3  ../build/bomres/bomres/lib/aggregate_bom.py  --pkgindex $(PWD)/$(DIR)/build/base_os/sbom/apkindex.tar    --desired $(PWD)/$(DIR)/build/base_os/sbom/os.conf  \
                           --resolved $(PWD)/$(DIR)/build/base_os/sbom/os.bom  --config $(PWD)/$(DIR)/build/base_os/config/settings  --output $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json 
+
+
+python_file: 
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode internal --type patch  --debug
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode internal --type code  --debug
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode internal --type build  --debug
+
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode external --type code  --debug
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode external --type patch  --debug
 
 container_aggregate: 
 	@docker run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox"  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  aggregate

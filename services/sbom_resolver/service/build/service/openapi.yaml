@@ -50,7 +50,7 @@ info:
     </ul>
 
 
-  version: "1.0.18"
+  version: "1.0.19"
   x-api-id: d3571587-2efd-4a6c-ab31-e7c1c9639843
   x-audience: external-public
   contact:
