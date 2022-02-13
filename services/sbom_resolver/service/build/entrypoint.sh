@@ -28,9 +28,9 @@ elif [ "$1" = 'download' ]; then
       exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode all  --debug
    elif [ "$#" -eq 2 ]; then
       if [ "$2" = "internal"  ]; then
-         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --debug
+         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type all  --debug
       elif [ "$2" = "external"  ]; then
-         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external  --debug
+         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external  --type all  --debug
       fi
    elif [ "$#" -eq 3 ]; then
       if [ "$2" = "internal"  ]; then
@@ -38,6 +38,8 @@ elif [ "$1" = 'download' ]; then
             exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal --type code  --debug
          elif [ "$3" = "patch"  ]; then
             exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type patch --debug
+         elif [ "$3" = "build"  ]; then
+            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type build --debug
          fi
       elif [ "$2" = "external"  ]; then
          if [ "$3" = "code"  ]; then
@@ -52,17 +54,18 @@ elif [ "$1" = 'make' ]; then
     cat /Makefile.bootstrap
 elif [ "$1" = 'help' ]; then
    echo ""
-   echo "init    :  Create a directory structure with tools needed to build a Alpine Base Image"
-   echo "make    :  Outputs a simple Makefile for building and resolving Alpine "
-   echo "download:  "
+   echo "init     :  Create a directory structure with tools needed to build a Alpine Base Image"
+   echo "make     :  Outputs a simple Makefile for building and resolving Alpine "
+   echo "download :  "
    echo "           internal: Download all code and patches from Alpine Aports repository "
    echo "           external: Download all code and patches from external sources"
-   echo "resolve :  Enrich the aggregated SBOM with information from Alpine Aports "
-   echo "clone   :  Clone Alpine aports repository to local directory"
-   echo "        :  Specify alternative path, default is https://git.alpinelinux.org/aports"
-   echo "index   :  Create metadata needed for faster resolve "
-   echo "server  :  Listen on port 8080 for HTTP requests , singlethread"
-   echo "uwsgi   :  Listen on port 8080 for HTTP requests , multithread"
+   echo "resolve  :  Enrich the aggregated SBOM with information from Alpine Aports "
+   echo "clone    :  Clone Alpine aports repository to local directory"
+   echo "         :  Specify alternative path, default is https://git.alpinelinux.org/aports"
+   echo "index    :  Create metadata needed for faster resolve "
+   echo "server   :  Listen on port 8080 for HTTP requests , singlethread"
+   echo "uwsgi    :  Listen on port 8080 for HTTP requests , multithread"
+   echo "gunicorn :  Listen on port 8080 for HTTP requests , multithread"
    echo ""
 elif [ "$1" = 'server' ]; then
    exec python3 app.py

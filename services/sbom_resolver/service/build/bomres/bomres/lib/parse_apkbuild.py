@@ -380,6 +380,7 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         result['download']['internal'] = {}
         result['download']['internal']['patch'] = []
         result['download']['internal']['code'] = []
+        result['download']['internal']['build'] = []
         source = result['source']
         for src in result['source']:
 
@@ -482,6 +483,18 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
                         repository, name, i_resolved)
                     result['download']['internal']['code'].append(tmp)
 
+                
+            tmp = {} 
+            tmp['local'] = {} 
+            tmp['local']['type'] = 'file'
+            tmp['local']['path'] = "%s/%s/APKBUILD" % (repository, name) 
+            tmp['remote'] = {}
+            tmp['remote']['type'] = 'git'
+            tmp['remote']['commit'] = repo_hash_dict[repository]
+            tmp['remote']['url'] = "git://git.alpinelinux.org/aports"
+            tmp['remote']['path'] = "%s/%s/APKBUILD" % (repository, name)
+
+            result['download']['internal']['build'] = tmp 
     return result, parse_info
 
  # Dictionairy for parsing command line args and options.

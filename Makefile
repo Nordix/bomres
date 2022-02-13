@@ -13,7 +13,7 @@ bom_resolver_base_os:
 	make -C services/sbom_resolver/base_os build
 
 bom_resolver_service:
-	make -C services/sbom_resolver/service build
+	make -C services/sbom_resolver/service/build build
 
 clean: 
 	make -C tools/base_os_alpine clean 
