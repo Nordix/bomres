@@ -32,8 +32,13 @@ python:
 
 run:
 	docker run -i -t  $(OPTIONS)  $(CONTAINER_IMAGE) server
+
 uwsgi:
 	docker run -i -t  $(OPTIONS)  $(CONTAINER_IMAGE) uwsgi
+
+gunicorn:
+	docker run -i -t  $(OPTIONS)  $(CONTAINER_IMAGE) gunicorn
+
 sh:
 	docker run -i -t  $(OPTIONS)  $(CONTAINER_IMAGE) sh
 

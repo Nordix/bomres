@@ -68,6 +68,8 @@ elif [ "$1" = 'server' ]; then
    exec python3 app.py
 elif [ "$1" = 'uwsgi' ]; then
    exec uwsgi --socket 0.0.0.0:8080 --protocol=http --wsgi-file wsgi.py --master --processes 4 --threads 2
+elif [ "$1" = 'gunicorn' ]; then
+   exec gunicorn -b:8080 --workers=2 wsgi:application
 else
     exec "$@"
 fi

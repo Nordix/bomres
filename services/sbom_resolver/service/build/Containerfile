@@ -9,12 +9,13 @@ LABEL org.opencontainers.image.authors=hans.thorsen@ericsson.com
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
-COPY Makefile.bootstrap /Makefile.bootstrap
-COPY entrypoint.sh /entrypoint.sh
 
 COPY bomres /src
 RUN pip3 install /src
+
+# Two candidates , not yet integrated , the development server is currently used in production
 RUN pip3 install uwsgi
+RUN pip3 install gunicorn
 
 COPY service /service
 WORKDIR /service
@@ -24,8 +25,13 @@ RUN chmod u+x,g+x /entrypoint.sh; \
     openssl rsa -in priv.pem -pubout > pub.pem; \
     rm -rf /src
 
+COPY Makefile.bootstrap /Makefile.bootstrap
+COPY entrypoint.sh /entrypoint.sh
+RUN  chmod u+x,g+x,o+x  /entrypoint.sh
+
 EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
 
+# Currently the singlethreaded development server
 CMD [ "server"]
