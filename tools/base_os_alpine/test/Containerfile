@@ -1,0 +1,17 @@
+#
+FROM docker.io/bomres/base_os_alpine
+
+# Setup alpine build environment
+RUN apk --update add alpine-sdk build-base pcre-dev autoconf automake
+
+RUN adduser builder -D -h /home/builder && addgroup builder abuild
+
+USER builder
+
+# Build grep
+# WORKDIR /home/builder/aports/main/grep
+# RUN abuild-keygen -a -n -q && abuild -r
+
+# RUN  ls /home/builder/aports
+
+
