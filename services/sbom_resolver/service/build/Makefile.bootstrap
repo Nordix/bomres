@@ -107,18 +107,30 @@ apkindex:
 	( cd $(DIR)/build/base_os/download  && find . -name APKINDEX.tar.gz | cut -c3- |  tar cf $(PWD)/$(DIR)/build/base_os/sbom/apkindex.tar -T -  )
 
 
-patches:
-	docker run  -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal
-
-source:
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external
 
 service:
 	docker run -i -t -p  8080:8080  $(CONTAINER_OPTIONS)  $(RESOLVER_IMAGE) server
 
-build: init config prepare public_build download private_build test apkindex token aggregate clone index resolve patches 
+build: init config prepare public_build download private_build test apkindex token aggregate clone index resolve
 
+
+
+internal_patches:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal patch
+
+internal_code:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal code
+
+internal_build:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal build
+
+external_patches:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external patch
+
+external_code:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
+
+download_source: internal_patches internal_code internal_build external_patches external_code
 
 clean: 
 	@rm -rf $(DIR) access_token
-

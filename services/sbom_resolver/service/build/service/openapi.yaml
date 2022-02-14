@@ -27,12 +27,17 @@ info:
        $ vim alpine/build/base_os/config/settings
        $ make build
        $ make resolve
+       $ make download_source
     ```
     <H2>Deployed as a local service</H2>
     ```json
        $ docker run docker.io/bomres/alpine_resolver make > Makefile
+       $ make config
+       $ vim alpine/build/base_os/config/packages
+       $ vim alpine/build/base_os/config/settings
        $ make service & 
        $ make build  
+       $ make download_source
     ```
     <H2>Deployed in Kubernetes</H2>
     ```json
@@ -50,7 +55,7 @@ info:
     </ul>
 
 
-  version: "1.0.19"
+  version: "1.0.20"
   x-api-id: d3571587-2efd-4a6c-ab31-e7c1c9639843
   x-audience: external-public
   contact:

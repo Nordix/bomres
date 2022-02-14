@@ -60,14 +60,25 @@ index:
 res: 
 	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom"  -v "$(TEMPDIR)/cache:/mnt/alpine/cache"  $(RESOLVER_IMAGE) resolve
 
-retrieve_patches:
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal
+internal_patches:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal patch
 
-retrieve_source:
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external
+internal_code:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal code
+
+internal_build:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal build
+
+
+external_patches:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external patch
+
+external_code:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
 
 build: init config prepare public_build download private_build test aggregate
 
-resolve: clone index res retrieve_patches # retrieve_source
+resolve: clone index res 
 
+download_source: internal_patches internal_code internal_build external_patches external_code
 
