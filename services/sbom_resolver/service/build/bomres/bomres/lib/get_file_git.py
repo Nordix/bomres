@@ -49,6 +49,7 @@ args_options = {
     'opt':
     [
         {'long': '--debug', 'help': 'Debug mode'},
+        {'long': '--cache', 'help': 'Populate cache with external code, required to prevent download from Internet during rebuild'},
         {'long': '--pull', 'help': 'Pull'}
     ],
     'opt_w_arg':
@@ -235,6 +236,70 @@ def get_external_code(sbom, srcdir, dstdir, mode, src_type, debug):
                                             "External patch downloaded: %s\n" % url)
 
 
+def get_external_cache(sbom, srcdir, dstdir, mode, src_type, debug):
+
+    #
+    # Populate cache with external code, required for rebuild
+    #
+
+    # Different repos have different repository states
+    for repo in sbom['metadata']['aggregator']['alpine']['aports']['repo']:
+        # There might be repos with no packages
+        if 'source' in sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]:
+            source = sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]['source']
+            hash = sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]['hash']
+            git_manager.checkout(hash, "%s/%s" % (srcdir, ALPINE_REPO_NAME))
+
+            # Iterate through all packages
+            for package in source:
+                index = package['index']
+                if 'aggregate' in sbom['dependencies'][index] and 'source' in sbom['dependencies'][index][
+                        'aggregate'] and 'external' in sbom['dependencies'][index]['aggregate']['source']:
+                    src = sbom['dependencies'][index]['aggregate']['source']['external']
+                    if src_type in ['all', 'code']:
+                        for code in src['code']:
+                            if 'generic' in code['remote']['type']:
+                                path = code['local']['path']
+                                url = code['remote']['url']
+                                #dstpath = dstdir + "/" + path
+                                dstpath = dstdir  + "/" + os.path.basename(path)
+                                directory = os.path.dirname(dstpath)
+                                dirpath = Path(directory)
+                                dirpath.mkdir(parents=True, exist_ok=True)
+                                try:
+                                    file = req.get(url, allow_redirects=True)
+                                    open(dstpath, 'wb').write(file.content)
+                                except BaseException:
+                                    sys.stderr.write(
+                                        "    **********Problem to download [%s] from [%s]\n" %
+                                        (package['package'], url))
+                                else:
+                                    if debug:
+                                        sys.stdout.write(
+                                            "External code downloaded: %s\n" % url)
+                    if src_type in ['all', 'patch']:
+                        for code in src['patch']:
+                            if 'generic' in code['remote']['type']:
+                                path = code['local']['path']
+                                url = code['remote']['url']
+                                #dstpath = dstdir + "/" + path
+                                dstpath = dstdir  + "/" + os.path.basename(path)
+                                directory = os.path.dirname(dstpath)
+                                dirpath = Path(directory)
+                                dirpath.mkdir(parents=True, exist_ok=True)
+                                try:
+                                    file = req.get(url, allow_redirects=True)
+                                    open(dstpath, 'wb').write(file.content)
+                                except BaseException:
+                                    sys.stderr.write(
+                                        "    **********Problem to download [%s] from [%s]\n" %
+                                        (package['package'], url))
+                                else:
+                                    if debug:
+                                        sys.stdout.write(
+                                            "External patch downloaded: %s\n" % url)
+
+
 def create_commit_map(resolved_sbom):
     """
        Arrange packages by repository ( main, community )
@@ -308,7 +373,13 @@ def main():
         sys.stdout.write("type: [code|patch|build|all]:  %s\n" % src_type)
         sys.stdout.write("tag: %s\n" % tag)
 
-    dstdir = args.output + "/" + tag + "." + arch
+    if args.cache: 
+       dstdir = args.output + "/cache" 
+       get_external_cache(resolved_sbom, args.src, dstdir, mode, src_type, args.debug)
+       sys.exit(0) 
+    else:
+       dstdir = args.output + "/repo" 
+
     path = Path(dstdir)
     path.mkdir(parents=True, exist_ok=True)
 

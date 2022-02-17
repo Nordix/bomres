@@ -130,7 +130,17 @@ external_patches:
 external_code:
 	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
 
+external_cache:
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download cache
+
+
+# Analyze source code
 download_source: internal_patches internal_code internal_build external_patches external_code
+
+# Rebuild packages
+download_cache: internal_patches internal_code internal_build external_cache
+
+
 
 clean: 
 	@rm -rf $(DIR) access_token

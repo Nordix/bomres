@@ -9,7 +9,7 @@ TOKEN_URL=http://localhost:8080/resolver/alpine/v1
 URL=https://lb.t2data.com
 URL=http://localhost:8080
 
-TOOLS_REPO      = dr.t2data.com/resolver
+TOOLS_REPO      = docker.io/bomres
 ALPINE_BUILDER  = base_os_alpine:latest
 BASE_OS_IMAGE   = $(TOOLS_REPO)/$(ALPINE_BUILDER)
 
@@ -101,6 +101,8 @@ python_file:
 
 	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode external --type code  --debug
 	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode external --type patch  --debug
+cache:
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode external --type all --cache   --debug
 
 container_aggregate: 
 	@docker run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox"  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  aggregate
@@ -191,7 +193,7 @@ retrieve_source:
 
 base_os: init config prepare public_build download private_build test container_aggregate
 
-tool: index resolve retrieve_patches # retrieve_source
+tool: index resolve 
 
 service: token rest_index rest_resolve retrieve_patches
 

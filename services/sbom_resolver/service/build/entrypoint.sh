@@ -28,24 +28,26 @@ elif [ "$1" = 'download' ]; then
       exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode all  --debug
    elif [ "$#" -eq 2 ]; then
       if [ "$2" = "internal"  ]; then
-         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type all  --debug
+         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type all  
       elif [ "$2" = "external"  ]; then
-         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external  --type all  --debug
+         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external  --type all  
+      elif [ "$2" = "cache"  ]; then
+         exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external  --type all  --cache --debug
       fi
    elif [ "$#" -eq 3 ]; then
       if [ "$2" = "internal"  ]; then
          if [ "$3" = "code"  ]; then
-            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal --type code  --debug
+            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal --type code  
          elif [ "$3" = "patch"  ]; then
-            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type patch --debug
+            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type patch 
          elif [ "$3" = "build"  ]; then
-            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type build --debug
+            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode internal  --type build 
          fi
       elif [ "$2" = "external"  ]; then
          if [ "$3" = "code"  ]; then
-            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external  --type code --debug
+            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external  --type code  --debug
          elif [ "$3" = "patch"  ]; then
-            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external --type patch --debug 
+            exec sbom-resolver-get_file_git  --src /mnt/alpine/src --resolved  /sbom/resolved.json   --output /source  --mode external --type patch  --debug
          fi
       fi
    fi
@@ -64,8 +66,8 @@ elif [ "$1" = 'help' ]; then
    echo "         :  Specify alternative path, default is https://git.alpinelinux.org/aports"
    echo "index    :  Create metadata needed for faster resolve "
    echo "server   :  Listen on port 8080 for HTTP requests , singlethread"
-   echo "uwsgi    :  Listen on port 8080 for HTTP requests , multithread"
-   echo "gunicorn :  Listen on port 8080 for HTTP requests , multithread"
+   echo "uwsgi    :  Listen on port 8080 for HTTP requests , multithread with uwsgi"
+   echo "gunicorn :  Listen on port 8080 for HTTP requests , multithread with gunicorn"
    echo ""
 elif [ "$1" = 'server' ]; then
    exec python3 app.py
