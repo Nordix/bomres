@@ -1,17 +1,14 @@
-#
-FROM docker.io/bomres/base_os_alpine
+
+# This should be built by bomresolver, Canadian cross 
+FROM alpine:3.14
 
 # Setup alpine build environment
 RUN apk --update add alpine-sdk build-base pcre-dev autoconf automake
+RUN echo PACKAGER_PRIVKEY="/pki/iafw.rsa" > /etc/abuild.conf
+RUN mkdir -p  /home/builder
+ENV REPODEST /home/builder/packages
 
-RUN adduser builder -D -h /home/builder && addgroup builder abuild
+WORKDIR /root
 
-USER builder
-
-# Build grep
-# WORKDIR /home/builder/aports/main/grep
-# RUN abuild-keygen -a -n -q && abuild -r
-
-# RUN  ls /home/builder/aports
 
 
