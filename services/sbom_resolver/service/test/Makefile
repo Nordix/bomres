@@ -108,7 +108,11 @@ container_aggregate:
 	@docker run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox"  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  aggregate
 
 
+ptool: 
+	python3 ../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source   --debug
 
+pctool: 
+	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom"   $(CONTAINER_IMAGE) tool
 
 config:
 	@docker run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config

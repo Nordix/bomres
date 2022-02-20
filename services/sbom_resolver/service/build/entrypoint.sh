@@ -20,6 +20,9 @@ elif [ "$1" = 'index' ]; then
    exec sbom-resolver-parse_apkbuild --apkindex /sbom/index.json     --checkout /mnt/alpine/checkout   --cache      /mnt/alpine/cache 
 
 
+elif [ "$1" = 'tool' ]; then
+   exec sbom-resolver-resolve_tool    --resolved /sbom/resolved.json   
+
 elif [ "$1" = 'resolve' ]; then
    exec sbom-resolver-resolve_bom    --packages /sbom/aggregated.json  --cache /mnt/alpine/cache         --output /sbom/resolved.json 
 

@@ -147,6 +147,12 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         elif re.findall(r'^makedepends=.*?$', s):
             result['makedepends'] = s.split('=')[1].strip('"')
 
+        elif re.findall(r'^makedepends_build=.*?$', s):
+            result['makedepends_build'] = s.split('=')[1].strip('"')
+
+        elif re.findall(r'^depends_dev=.*?$', s):
+            result['depends_dev'] = s.split('=')[1].strip('"')
+
         elif re.findall(r'^checkdepends=.*?$', s):
             result['checkdepends'] = s.split('=')[1].strip('"')
 
