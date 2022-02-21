@@ -94,6 +94,16 @@ python_aggregate:
                           --resolved $(PWD)/$(DIR)/build/base_os/sbom/os.bom  --config $(PWD)/$(DIR)/build/base_os/config/settings  --output $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json 
 
 
+python_index: 
+	python3  ../build/bomres/bomres/lib/aggregate_bom.py      --pkgindex $(PWD)/$(DIR)/build/base_os/sbom/apkindex.tar   --output   $(PWD)/$(DIR)/build/base_os/sbom/index.json
+	python3  ../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(PWD)/$(DIR)/build/base_os/sbom/index.json     --src      /tmp/alpine/src        --checkout   /tmp/alpine/checkout --cache /tmp/alpine/cache --debug
+	python3  ../build/bomres/bomres/lib/parse_apkbuild.py     --apkindex $(PWD)/$(DIR)/build/base_os/sbom/index.json     --checkout /tmp/alpine/checkout   --cache      /tmp/alpine/cache
+
+
+python_resolve: 
+	python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json   --cache /tmp/alpine/cache         --output $(PWD)/$(DIR)/build/base_os/sbom/resolved.json --debug 
+
+
 python_file: 
 	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode internal --type patch  --debug
 	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode internal --type code  --debug
