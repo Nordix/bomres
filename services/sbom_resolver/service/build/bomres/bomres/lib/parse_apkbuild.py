@@ -77,6 +77,7 @@ def handle_double_colon(string):
 
 def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
 
+    
     parse_info = {}
     result = {}
     result['repository'] = repository
@@ -86,8 +87,14 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
     STATE_SRC = False
     START_SRC = 'source="'
 
-    START_SHA = 'sha512sums="'
-    STATE_SHA = False
+    START_SHA512 = 'sha512sums="'
+    STATE_SHA512 = False
+
+    START_SHA256 = 'sha256sums="'
+    STATE_SHA256 = False
+
+    START_MD5 = 'md5sums="'
+    STATE_MD5 = False
 
     START_SECFIXES = "# secfixes:"
     STATE_SECFIXES = False
@@ -144,22 +151,24 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         elif re.findall(r'^license=.*?$', s):
             result['license'] = s.split('=')[1].strip('"')
 
+        elif re.findall(r'^depends=.*?$', s):
+            result['depends'] = s.split('=')[1].strip('"')
+
         elif re.findall(r'^makedepends=.*?$', s):
             result['makedepends'] = s.split('=')[1].strip('"')
-
-        elif re.findall(r'^makedepends_build=.*?$', s):
-            result['makedepends_build'] = s.split('=')[1].strip('"')
-
-        elif re.findall(r'^depends_dev=.*?$', s):
-            result['depends_dev'] = s.split('=')[1].strip('"')
 
         elif re.findall(r'^checkdepends=.*?$', s):
             result['checkdepends'] = s.split('=')[1].strip('"')
 
+
         #  https://wiki.archlinux.org/title/GNOME_package_guidelines
         #  openssl _abiver=${pkgver%.*}   1.1.1k -> 1.1
 
+        #
+        # If keyword not listed above, it end up here 
+        # 
         elif re.findall(r'^[_a-zA-Z].*=["${}.%a-zA-Z0-9].*', s):
+        
             k = s.split('=')[0]
             v = s.split('=')[1]
             v = v.replace('"', '')
@@ -168,8 +177,11 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             # assignment in code , see gcc in main repo
             if not re.search('[ \t]+', k):
                 if k == "source":
-                    temp = handle_double_colon(v)
-                    result['source'].append(temp)
+                    for fi in v.split():  
+                      if len(fi) > 0:
+                         tmp = handle_double_colon(fi)
+                         if tmp not in result['source']:
+                            result['source'].append(tmp)
                 else:
                     var_map[k] = v
 
@@ -228,28 +240,33 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             # This entry handles entries after start and before end
             tmp = s.lstrip()
             tmp = tmp.strip('"')
-            if len(tmp) > 0:
-                tmp = handle_double_colon(tmp)
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                tmp = handle_double_colon(fi)
                 if tmp not in result['source']:
                     result['source'].append(tmp)
 
         if (s.startswith(START_SRC) and s.endswith('"')):
             # One line
+            STATE_SRC = True
             result['source'] = []
             tmp = s.split(START_SRC)[1]
             tmp = tmp.lstrip()
             tmp = tmp.rstrip('"')
-            if tmp != "":
-                tmp = handle_double_colon(tmp)
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                tmp = handle_double_colon(fi)
                 if tmp not in result['source']:
                     result['source'].append(tmp)
+
         elif (s.startswith(START_SRC)):
             # multiline
             STATE_SRC = True
             tmp = s.split(START_SRC)[1]
             tmp = tmp.lstrip()
-            if tmp != "":
-                tmp = handle_double_colon(tmp)
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                tmp = handle_double_colon(fi)
                 if tmp not in result['source']:
                     result['source'].append(tmp)
 
@@ -258,42 +275,156 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             STATE_SRC = False
             tmp = s.lstrip()
             tmp = tmp.strip('"')
-            if tmp != "":
-                tmp = handle_double_colon(tmp)
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                tmp = handle_double_colon(fi)
                 if tmp not in result['source']:
                     result['source'].append(tmp)
 
         #
         # Checksum
-        #
+        # 
 
-        if (STATE_SHA):
+        if (STATE_MD5):
             tmp = s.lstrip()
             tmp = tmp.strip('"')
-            if tmp != "":
-                result['sha512sums'].append(tmp)
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'md5' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
 
-        if (s.startswith(START_SHA) and s.endswith('"')):
-            result['sha512sums'] = []
-            tmp = s.split(START_SHA)[1]
+        if (s.startswith(START_MD5) and s.endswith('"')):
+            if 'checksum' not in result: 
+            	result['checksum'] = {}
+            tmp = s.split(START_MD5)[1]
             tmp = tmp.lstrip()
             tmp = tmp.rstrip('"')
-            if tmp != "":
-                result['sha512sums'].append(tmp)
-        elif (s.startswith(START_SHA)):
-            STATE_SHA = True
-            result['sha512sums'] = []
-            tmp = s.split(START_SHA)[1]
-            tmp = tmp.lstrip()
-            if tmp != "":
-                result['sha512sums'].append(tmp)
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'md5' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
 
-        if (STATE_SHA and s.endswith('"')):
-            STATE_SHA = False
+        elif (s.startswith(START_MD5)):
+            STATE_MD5 = True
+            if 'checksum' not in result: 
+            	result['checksum'] = {}
+            tmp = s.split(START_MD5)[1]
+            tmp = tmp.lstrip()
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'md5' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        if (STATE_MD5 and s.endswith('"')):
+            STATE_MD5 = False
             tmp = s.lstrip()
             tmp = tmp.strip('"')
-            if tmp != "":
-                result['sha512sums'].append(tmp)
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'md5' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        if (STATE_SHA256):
+            tmp = s.lstrip()
+            tmp = tmp.strip('"')
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'sha256' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        if (s.startswith(START_SHA256) and s.endswith('"')):
+            if 'checksum' not in result: 
+            	result['checksum'] = {}
+            tmp = s.split(START_SHA256)[1]
+            tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'sha256' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        elif (s.startswith(START_SHA256)):
+            STATE_SHA256 = True
+            if 'checksum' not in result: 
+            	result['checksum'] = {}
+            tmp = s.split(START_SHA256)[1]
+            tmp = tmp.lstrip()
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'sha256' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        if (STATE_SHA256 and s.endswith('"')):
+            STATE_SHA256 = False
+            tmp = s.lstrip()
+            tmp = tmp.strip('"')
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'sha256' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        if (STATE_SHA512):
+            tmp = s.lstrip()
+            tmp = tmp.strip('"')
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'sha512' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        if (s.startswith(START_SHA512) and s.endswith('"')):
+            if 'checksum' not in result: 
+            	result['checksum'] = {}
+            tmp = s.split(START_SHA512)[1]
+            tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'sha512' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        elif (s.startswith(START_SHA512)):
+            STATE_SHA512 = True
+            if 'checksum' not in result: 
+            	result['checksum'] = {}
+            tmp = s.split(START_SHA512)[1]
+            tmp = tmp.lstrip()
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'sha512' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
+
+        if (STATE_SHA512 and s.endswith('"')):
+            STATE_SHA512 = False
+            tmp = s.lstrip()
+            tmp = tmp.strip('"')
+            tmp = tmp.split()
+            if len(tmp) == 2:
+                entry = {} 
+                entry['type'] = 'sha512' 
+                entry['value'] = tmp[0] 
+                result['checksum'][tmp[1]] = entry
 
         #
         # Security fixes
@@ -320,6 +451,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             else:
                 secfixes_yaml = ""
                 result['security'] = secfixes
+
+    # END of parsing , pass 1 
 
     # https://wiki.archlinux.org/title/GNOME_package_guidelines
     #   where ${pkgver%.*} returns the major.minor package version,             \
@@ -370,7 +503,62 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
                 resolved = resolved.replace("$%s" % key, exp_var_map[key])
             result['childs'].append(resolved)
 
+    # Dependencies 
+    #  install/runtime:   depends 
+    #  build: 
+    #    check: checkdepends
+    #    compile: makedepends
+    #                 $depends_dev
     #
+    tool_dep = [] 
+    if 'makedepends' in result: 
+      for dep in result['makedepends'].split(): 
+        if dep[0] == '$' or dep[0] == '_' : 
+          key = dep[1:]
+          if key in var_map and len(var_map[key]) > 0: 
+            for sdep in var_map[key].split():  
+              if sdep[0] == '$' or sdep[0] == '_' : 
+                 skey = sdep[1:]
+                 if skey in var_map and len(var_map[skey]) > 0: 
+                    entry = var_map[skey] 
+                 else: 
+                    entry = skey
+              else: 
+                 entry = sdep
+          else: 
+            entry = key
+        else: 
+          entry = dep 
+        tool_dep.append(entry) 
+      if 'tools' not in result: 
+         result['tools'] = {}
+      result['tools']['makedepends'] = tool_dep
+    
+    check_dep = [] 
+
+    if 'checkdepends' in result: 
+      for dep in result['checkdepends'].split(): 
+        if dep[0] == '$' or dep[0] == '_' : 
+          key = dep[1:]
+          if key in var_map and len(var_map[key]) > 0: 
+            for sdep in var_map[key].split():  
+              if sdep[0] == '$' or sdep[0] == '_' : 
+                 skey = sdep[1:]
+                 if skey in var_map and len(var_map[skey]) > 0: 
+                    entry = var_map[skey] 
+                 else: 
+                    entry = skey
+              else: 
+                 entry = sdep
+          else: 
+            entry = key
+        else: 
+          entry = dep 
+        check_dep.append(entry) 
+      if 'tools' not in result: 
+         result['tools'] = {}
+      result['tools']['checkdepends'] = check_dep
+    
     # source section consists of the following entries
     #  external code with url ://
     #  external patch with url ://
