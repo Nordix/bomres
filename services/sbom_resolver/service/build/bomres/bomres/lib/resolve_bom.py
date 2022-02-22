@@ -74,8 +74,33 @@ def export_json(inp):
     y = io.getvalue()
     return y
 
+def list_of_tools(prod,alpine_dict): 
+    """
+    1. Get all build/check dependencies 
+    2. Resolve sub-package to parent 
+
+           "tools": {
+                "makedepends": [
+                    "py3-setuptools"
+                ],
+                "checkdepends": [
+                    "py3-pytest"
+                ]
+            }
+    """
+    tmp = [] 
+    for kind in alpine_dict['map'][prod]['tools']: 
+        for pkg in alpine_dict['map'][prod]['tools'][kind]: 
+            #if 'parent' in alpine_dict['map'][pkg]: 
+            #    parent = alpine_dict['map'][pkg]['parent']
+            #    tmp.append(parent) 
+            tmp.append(pkg) 
+    return tmp
+
 
 def mapper(comp_dict, alpine_dict, debug=False):
+
+    tool_dict = {} 
 
     stats = {}
     stats['total'] = 0
@@ -170,6 +195,12 @@ def mapper(comp_dict, alpine_dict, debug=False):
                             comp['aggregate']['info']['license'] = alpine_dict['map'][prod]['license']
                         if debug:
                             sys.stdout.write("Match\n")
+                        if 'tools' in alpine_dict['map'][prod]:
+                            temp = list_of_tools(prod,alpine_dict)
+                            for pkg in temp: 
+                              if pkg not in  tool_dict :
+                                 tool_dict[pkg] = []
+                              tool_dict[pkg].append(prod)
                     else:
                         comp['aggregate'] = {}
                         comp['aggregate']['match'] = 'product_match'
@@ -187,6 +218,7 @@ def mapper(comp_dict, alpine_dict, debug=False):
                             sys.stdout.write("Version missing [%s] [%s]\n" % (
                                 ver, alpine_dict['map'][prod]['pkgver']))
 
+    comp_dict['tools'] = tool_dict
     comp_dict['stats'] = {}
     comp_dict['stats']['aggregate'] = stats
     return comp_dict
