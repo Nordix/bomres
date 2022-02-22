@@ -87,6 +87,9 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
     STATE_SRC = False
     START_SRC = 'source="'
 
+    STATE_INSTALL = False
+    START_INSTALL = 'install="'
+
     START_SHA512 = 'sha512sums="'
     STATE_SHA512 = False
 
@@ -117,6 +120,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         return result, parse_info
 
     var_map = {}
+    # See issue https://github.com/Nordix/bomres/issues/48
+    prevent_version_truncation_list = [] 
 
     for s in buff.split('\n'):
 
@@ -133,6 +138,11 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             k = 'pkgver'
             result[k] = v
             var_map[k] = v
+            major_minor_maint = v.split('.')
+            if len(major_minor_maint) > 2:
+               _v = '.'.join(major_minor_maint[:-1])
+               if name not in prevent_version_truncation_list: 
+                  var_map['_v'] = _v
 
         elif re.findall(r'^pkgrel=.*?$', s):
             result['pkgrel'] = s.split('=')[1].strip('"')
@@ -160,6 +170,14 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         elif re.findall(r'^checkdepends=.*?$', s):
             result['checkdepends'] = s.split('=')[1].strip('"')
 
+        elif re.findall(r'^triggers=.*?$', s):
+            trigger = s.split('=')[1].strip('"')
+            tmp = handle_double_colon(trigger)
+            if tmp not in result['source']:
+               if 'source' not in result: 
+                  result['source'] = [] 
+               result['source'].append(tmp)
+
 
         #  https://wiki.archlinux.org/title/GNOME_package_guidelines
         #  openssl _abiver=${pkgver%.*}   1.1.1k -> 1.1
@@ -181,6 +199,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
                       if len(fi) > 0:
                          tmp = handle_double_colon(fi)
                          if tmp not in result['source']:
+                            if 'source' not in result: 
+                               result['source'] = [] 
                             result['source'].append(tmp)
                 else:
                     var_map[k] = v
@@ -231,6 +251,52 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
                     ii = i.split(':')[0]
                     result['subpackages'].append(ii)
 
+        if (STATE_INSTALL):
+            # This entry handles entries after start and before end
+            tmp = s.lstrip()
+            tmp = tmp.strip('"')
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                tmp = handle_double_colon(fi)
+                if tmp not in result['source']:
+                    result['source'].append(tmp)
+
+        if (s.startswith(START_INSTALL) and s.endswith('"')):
+            # One line
+            STATE_INSTALL = True
+            if 'source' not in result: 
+               result['source'] = []
+            tmp = s.split(START_INSTALL)[1]
+            tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                tmp = handle_double_colon(fi)
+                if tmp not in result['source']:
+                    result['source'].append(tmp)
+
+        elif (s.startswith(START_INSTALL)):
+            # multiline
+            STATE_INSTALL = True
+            tmp = s.split(START_INSTALL)[1]
+            tmp = tmp.lstrip()
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                tmp = handle_double_colon(fi)
+                if tmp not in result['source']:
+                    result['source'].append(tmp)
+
+        if (STATE_INSTALL and s.endswith('"')):
+            # End of multiline source section
+            STATE_INSTALL = False
+            tmp = s.lstrip()
+            tmp = tmp.strip('"')
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                tmp = handle_double_colon(fi)
+                if tmp not in result['source']:
+                    result['source'].append(tmp)
+
         #
         # Extract source code dependency from APKBUILD
         # Line starts with source=" and ends with "
@@ -249,7 +315,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         if (s.startswith(START_SRC) and s.endswith('"')):
             # One line
             STATE_SRC = True
-            result['source'] = []
+            if 'source' not in result: 
+               result['source'] = []
             tmp = s.split(START_SRC)[1]
             tmp = tmp.lstrip()
             tmp = tmp.rstrip('"')
