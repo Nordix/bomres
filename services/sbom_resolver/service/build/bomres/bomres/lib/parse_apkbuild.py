@@ -83,6 +83,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
     result['repository'] = repository
 
     result['source'] = []
+    result['checkdepends'] = []
+    result['makedepends'] = []
 
     STATE_SRC = False
     START_SRC = 'source="'
@@ -221,6 +223,7 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
                 for i in tmp.split():
                     ii = i.split(':')[0]
                     result['subpackages'].append(ii)
+
         elif (s.startswith(START_SUBPACK)):
             # multiline
             STATE_SUBPACK = True
@@ -248,34 +251,34 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             tmp = tmp.strip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
-                tmp = handle_double_colon(fi)
-                if tmp not in result['source']:
-                    result['source'].append(tmp)
+                temp = handle_double_colon(fi)
+                if temp not in result['source']:
+                    result['source'].append(temp)
 
         if (s.startswith(START_INSTALL) and s.endswith('"')):
             # One line
             STATE_INSTALL = True
-            if 'source' not in result: 
-               result['source'] = []
             tmp = s.split(START_INSTALL)[1]
             tmp = tmp.lstrip()
             tmp = tmp.rstrip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
-                tmp = handle_double_colon(fi)
-                if tmp not in result['source']:
-                    result['source'].append(tmp)
+                STATE_INSTALL = False
+                temp = handle_double_colon(fi)
+                if temp not in result['source']:
+                    result['source'].append(temp)
 
         elif (s.startswith(START_INSTALL)):
             # multiline
             STATE_INSTALL = True
             tmp = s.split(START_INSTALL)[1]
             tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
-                tmp = handle_double_colon(fi)
-                if tmp not in result['source']:
-                    result['source'].append(tmp)
+                temp = handle_double_colon(fi)
+                if temp not in result['source']:
+                    result['source'].append(temp)
 
         if (STATE_INSTALL and s.endswith('"')):
             # End of multiline source section
@@ -284,9 +287,9 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             tmp = tmp.strip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
-                tmp = handle_double_colon(fi)
-                if tmp not in result['source']:
-                    result['source'].append(tmp)
+                temp = handle_double_colon(fi)
+                if temp not in result['source']:
+                    result['source'].append(temp)
 
         #
         # Extract source code dependency from APKBUILD
@@ -321,6 +324,7 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             STATE_SRC = True
             tmp = s.split(START_SRC)[1]
             tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
                 temp = handle_double_colon(fi)
@@ -344,14 +348,11 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             tmp = tmp.strip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
-                temp = fi
-                if temp not in result['checkdepends']:
-                    result['checkdepends'].append(temp)
+                if fi not in result['checkdepends']:
+                   result['checkdepends'].append(fi)
 
         if (s.startswith(START_DEPCHECK) and s.endswith('"')):
             # One line
-            if 'checkdepends' not in result: 
-               result['checkdepends'] = []
             tmp = s.split(START_DEPCHECK)[1]
             tmp = tmp.lstrip()
             tmp = tmp.rstrip('"')
@@ -359,28 +360,23 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             for fi in tmp.split():  
               if len(fi) > 0:
                 STATE_DEPCHECK = False
-                temp = fi
-                if temp not in result['checkdepends']:
-                    result['checkdepends'].append(temp)
+                if fi not in result['checkdepends']:
+                   result['checkdepends'].append(fi)
 
         elif (s.startswith(START_DEPCHECK)):
-            if 'checkdepends' not in result: 
-               result['checkdepends'] = []
             # multiline
             STATE_DEPCHECK = True
             tmp = s.split(START_DEPCHECK)[1]
             tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
-                temp = fi
-                if temp not in result['checkdepends']:
-                    result['checkdepends'].append(temp)
+                if fi not in result['checkdepends']:
+                   result['checkdepends'].append(fi)
 
         if (STATE_DEPCHECK and s.endswith('"')):
             # End of multiline checkdepends section
             tmp = s.lstrip()
-            if 'checkdepends' not in result: 
-               result['checkdepends'] = []
             if not s.startswith(START_DEPCHECK): 
                STATE_DEPCHECK = False
             else: 
@@ -390,7 +386,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
               if len(fi) > 0:
                 temp = fi
                 if temp not in result['checkdepends']:
-                    result['checkdepends'].append(temp)
+                   result['checkdepends'].append(temp)
+
 
         if (STATE_MAKECHECK):
             # This entry handles entries after start and before end
@@ -398,110 +395,47 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             tmp = tmp.strip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
-                temp = fi
-                if temp not in result['makedepends']:
-                    result['makedepends'].append(temp)
+                if fi not in result['makedepends']:
+                   result['makedepends'].append(fi)
 
         if (s.startswith(START_MAKECHECK) and s.endswith('"')):
             # One line
-            if 'makedepends' not in result: 
-               result['makedepends'] = []
             tmp = s.split(START_MAKECHECK)[1]
             tmp = tmp.lstrip()
             tmp = tmp.rstrip('"')
-            STATE_MAKECHECK = True
+            # makedepends="" 
+            if not s.endswith('""'): 
+              STATE_MAKECHECK = True
             for fi in tmp.split():  
               if len(fi) > 0:
                 STATE_MAKECHECK = False
-                temp = fi
-                if temp not in result['makedepends']:
-                    result['makedepends'].append(temp)
+                if fi not in result['makedepends']:
+                   result['makedepends'].append(fi)
 
         elif (s.startswith(START_MAKECHECK)):
-            if 'makedepends' not in result: 
-               result['makedepends'] = []
             # multiline
             STATE_MAKECHECK = True
             tmp = s.split(START_MAKECHECK)[1]
             tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
-                temp = fi
-                if temp not in result['makedepends']:
-                    result['makedepends'].append(temp)
+                if fi not in result['makedepends']:
+                   result['makedepends'].append(fi)
 
         if (STATE_MAKECHECK and s.endswith('"')):
             # End of multiline makedepends section
-            if 'makedepends' not in result: 
-               result['makedepends'] = []
+            tmp = s.lstrip()
             if not s.startswith(START_MAKECHECK): 
                STATE_MAKECHECK = False
-            tmp = s.lstrip()
+            else: 
+               tmp = tmp.split(START_MAKECHECK)[1]
             tmp = tmp.strip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
                 temp = fi
                 if temp not in result['makedepends']:
-                    result['makedepends'].append(temp)
-
-        #
-        # Checksum
-        # 
-        #
-        # Checksum
-        # 
-        if (STATE_DEPCHECK):
-            # This entry handles entries after start and before end
-            tmp = s.lstrip()
-            tmp = tmp.strip('"')
-            for fi in tmp.split():  
-              if len(fi) > 0:
-                temp = fi
-                if temp not in result['checkdepends']:
-                    result['checkdepends'].append(temp)
-
-        if (s.startswith(START_DEPCHECK) and s.endswith('"')):
-            # One line
-            if 'checkdepends' not in result: 
-               result['checkdepends'] = []
-            tmp = s.split(START_DEPCHECK)[1]
-            tmp = tmp.lstrip()
-            tmp = tmp.rstrip('"')
-            STATE_DEPCHECK = True
-            for fi in tmp.split():  
-              if len(fi) > 0:
-                STATE_DEPCHECK = False
-                temp = fi
-                if temp not in result['checkdepends']:
-                    result['checkdepends'].append(temp)
-
-        elif (s.startswith(START_DEPCHECK)):
-            if 'checkdepends' not in result: 
-               result['checkdepends'] = []
-            # multiline
-            STATE_DEPCHECK = True
-            tmp = s.split(START_DEPCHECK)[1]
-            tmp = tmp.lstrip()
-            for fi in tmp.split():  
-              if len(fi) > 0:
-                temp = fi
-                if temp not in result['checkdepends']:
-                    result['checkdepends'].append(temp)
-
-        if (STATE_DEPCHECK and s.endswith('"')):
-            # End of multiline checkdepends section
-            if 'checkdepends' not in result: 
-               result['checkdepends'] = []
-            if not s.startswith(START_DEPCHECK): 
-               STATE_DEPCHECK = False
-            tmp = s.lstrip()
-            tmp = tmp.strip('"')
-            for fi in tmp.split():  
-              if len(fi) > 0:
-                temp = fi
-                if temp not in result['checkdepends']:
-                    result['checkdepends'].append(temp)
-
+                   result['makedepends'].append(temp)
         #
         # Checksum
         # 
@@ -733,8 +667,6 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
     #
     tool_dep = [] 
     if 'makedepends' in result: 
-      if name == 'nginx': 
-         print(result['makedepends']) 
       for dep in result['makedepends']: 
         if dep[0] == '$' or dep[0] == '_' : 
           key = dep[1:]
