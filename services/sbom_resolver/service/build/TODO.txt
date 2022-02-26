@@ -5,23 +5,7 @@ There is a small utility for downloading patches and addons,  The purpose is to 
 
 api/get_file_git.py
 
-
-#1 Parsing of multiple sources 
-
-A list of files in APKBUILD must be added to the JSON as separate entries. 
-
-busybox-initscripts
-
-source="acpid.initd crond.initd dnsd.initd httpd.initd inetd.initd klogd.initd
-        mdev.initd ntpd.initd rdate.initd syslog.initd udhcpd.initd loadkmap.initd
-        watchdog.initd crond.confd klogd.confd ntpd.confd rdate.confd syslog.confd
-        watchdog.confd loadkmap.confd mdev.conf dvbdev usbdev persistent-storage
-
-
-"local": {
-      "path": "main/busybox-initscripts/acpid.initd crond.initd dnsd.initd httpd.initd inetd.initd klogd.initd",
-
-
+#1 Fixed 
 #2 The Complete SBOM spans several APKINDEX files ( main / community ) to speed up copying the algorithm should sort entries for each repo 
 
 
@@ -165,5 +149,22 @@ $ tree /tmp/src.v3.15.0.x86_64/
     "processed": 6278
   }
 }
+
+#5 ------------------------------------------------- Parsing error 
+
+leading key 'install=' included in local file 
+"path": "main/alpine-base/install="
+
+#6 -------------------------------------------------  Variable expansion 
+
+lua5.3
+   $_pkgname-5.3.6.tar.gz
+
+zip
+   zip${_pkgver}.tar.gz
+
+
+
+
 
 

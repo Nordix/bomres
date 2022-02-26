@@ -76,8 +76,7 @@ def export_json(inp):
 
 def list_of_tools(prod,alpine_dict): 
     """
-    1. Get all build/check dependencies 
-    2. Resolve sub-package to parent 
+    1. concatenate build/check dependencies 
 
            "tools": {
                 "makedepends": [
@@ -91,10 +90,12 @@ def list_of_tools(prod,alpine_dict):
     tmp = [] 
     for kind in alpine_dict['map'][prod]['tools']: 
         for pkg in alpine_dict['map'][prod]['tools'][kind]: 
-            #if 'parent' in alpine_dict['map'][pkg]: 
-            #    parent = alpine_dict['map'][pkg]['parent']
-            #    tmp.append(parent) 
-            tmp.append(pkg) 
+            # APKBUILD for libc-dev have some empty variables listed in makedepends
+            try: 
+             if pkg in alpine_dict['map']: 
+              tmp.append(pkg) 
+            except: 
+              pass
     return tmp
 
 
@@ -114,8 +115,6 @@ def mapper(comp_dict, alpine_dict, debug=False):
 
     if 'dependencies' in comp_dict:
         iterate = comp_dict['dependencies']
-    else:
-        iterate = comp_dict['data']['dependencies']
 
     for comp in iterate:
 
@@ -137,6 +136,7 @@ def mapper(comp_dict, alpine_dict, debug=False):
                     continue
                 if debug:
                     sys.stdout.write("Processing  [%s]  [%s]: " % (prod, ver))
+                    pprint.pprint(comp)
 
                 if prod != parent:
                     stats['children'] = stats['children'] + 1
@@ -189,18 +189,25 @@ def mapper(comp_dict, alpine_dict, debug=False):
                             if 'info' not in comp['aggregate']:
                                 comp['aggregate']['info'] = {}
                             comp['aggregate']['info']['secfixes'] = alpine_dict['map'][prod]['security']
+                        if 'checksum' in alpine_dict['map'][prod]:
+                            if len(alpine_dict['map'][prod]['checksum']) > 0: 
+                               comp['aggregate']['source']['checksum'] = alpine_dict['map'][prod]['checksum'] 
                         if 'license' in alpine_dict['map'][prod]:
                             if 'info' not in comp['aggregate']:
                                 comp['aggregate']['info'] = {}
                             comp['aggregate']['info']['license'] = alpine_dict['map'][prod]['license']
                         if debug:
                             sys.stdout.write("Match\n")
+                            pprint.pprint(alpine_dict['map'][prod])
                         if 'tools' in alpine_dict['map'][prod]:
                             temp = list_of_tools(prod,alpine_dict)
                             for pkg in temp: 
+                             try: 
                               if pkg not in  tool_dict :
                                  tool_dict[pkg] = []
                               tool_dict[pkg].append(prod)
+                             except: 
+                              pass
                     else:
                         comp['aggregate'] = {}
                         comp['aggregate']['match'] = 'product_match'

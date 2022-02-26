@@ -104,7 +104,8 @@ pindex:
 	python3  ../build/bomres/bomres/lib/parse_apkbuild.py     --apkindex $(PWD)/$(DIR)/build/base_os/sbom/index.json     --checkout /tmp/alpine/checkout   --cache      /tmp/alpine/cache
 
 python_resolve: 
-	python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json   --cache /tmp/alpine/cache         --output $(PWD)/$(DIR)/build/base_os/sbom/resolved.json --debug 
+	python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json   --cache /tmp/alpine/cache         --output $(PWD)/$(DIR)/build/base_os/sbom/resolved.json 
+	#python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages /home/ehathor/builder2/tool/build/base_os/sbom/aggregated.json   --cache /tmp/alpine/cache         --output /tmp/resolved.json --debug 
 
 
 python_file: 
@@ -122,7 +123,8 @@ container_aggregate:
 
 
 ptool: 
-	python3 ../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source   --debug
+	python3 ../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json  --packages
+	python3 ../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json  --settings
 
 pctool: 
 	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom"   $(CONTAINER_IMAGE) tool

@@ -47,15 +47,15 @@ ALPINE_REPO_NAME = "aports"
 args_options = {
     'opt':
     [
-        {'long': '--debug', 'help': 'Debug mode'}
+        {'long': '--debug', 'help': 'Debug mode'},
+        {'long': '--packages', 'help': 'Packages'},
+        {'long': '--settings', 'help': 'Settings'}
     ],
     'opt_w_arg':
     [
 
         {'long': '--resolved', 'help': 'Resolved SBOM in JSON Format ',
-         'meta': 'resolved', 'required': True},
-        {'long': '--output', 'help': 'Output directory',
-         'meta': 'output', 'required': False}
+         'meta': 'resolved', 'required': True}
     ]
 }
 
@@ -117,6 +117,33 @@ def get_tools(sbom,  debug):
 
 
 
+def get_settings(sbom,  debug):
+
+    #
+    # Populate cache with external code, required for rebuild
+    #
+
+    # Different repos have different repository states
+    s = ""
+    if 'tools' in sbom: 
+      s =  s + "#" + "\n" 
+      s =  s + "# This desired SBOM is generated from the complete product  SBOM" + "\n" 
+      s =  s + "#" + "\n" 
+      s =  s + "#" + "\n" 
+      tmp = sbom["metadata"]["aggregator"]["alpine"]["settings"]
+      for k in tmp: 
+       if k == 'BASE_OS_IMAGE': 
+         s =  s + "#" + "\n" 
+         s =  s + "# _tool appended to product image name " + "\n" 
+         s =  s + "#" + "\n" 
+         s =  s +  k + "=\"" + tmp[k] + "_tool" + "\"\n" 
+         s =  s + "#" + "\n" 
+       else: 
+         s =  s +  k + "=\"" + tmp[k] + "\"\n" 
+    return s
+
+
+
 def main():
 
     args = parse_cmdline()
@@ -124,8 +151,12 @@ def main():
 
     if args.resolved:
         resolved_sbom = import_json(args.resolved)
-        tmp = get_tools(resolved_sbom,  args.debug)
-        print(tmp) 
+        if args.packages:
+           tmp = get_tools(resolved_sbom,  args.debug)
+           sys.stdout.write(tmp) 
+        elif args.settings:
+           tmp = get_settings(resolved_sbom,  args.debug)
+           sys.stdout.write(tmp) 
 
 
     sys.exit(0)
