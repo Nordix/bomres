@@ -26,6 +26,7 @@ RUN chmod u+x,g+x /entrypoint.sh; \
     rm -rf /src
 
 COPY Makefile.bootstrap /Makefile.bootstrap
+COPY Makefile.tool /Makefile.tool
 COPY entrypoint.sh /entrypoint.sh
 RUN  chmod u+x,g+x,o+x  /entrypoint.sh
 

@@ -11,3 +11,6 @@ musl
 busybox
 libc6-compat
 util-linux
+
+lighttpd #S
+

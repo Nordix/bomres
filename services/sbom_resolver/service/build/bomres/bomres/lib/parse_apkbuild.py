@@ -283,7 +283,11 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         if (STATE_INSTALL and s.endswith('"')):
             # End of multiline source section
             STATE_INSTALL = False
-            tmp = s.lstrip()
+            if s.startswith(START_INSTALL): 
+              tmp = s.split(START_INSTALL)[1]
+              tmp = tmp.lstrip()
+            else: 
+              tmp = s.lstrip()
             tmp = tmp.strip('"')
             for fi in tmp.split():  
               if len(fi) > 0:
