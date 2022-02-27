@@ -163,8 +163,31 @@ lua5.3
 zip
    zip${_pkgver}.tar.gz
 
+#7 openldap and childs 
+"childs": [],
+
+#7  Conflict. The container name "/alpine3.14" is already in use by container  
+docker run --rm -i  --name alpine3.14 alpine_sandbox_base_os:3.14.1  /bin/sh -c 'apk info -v 2> /dev/null' > sbom/os.apk
+
+#8 depends with version 
+
+pkgname=busybox-initscripts
+depends="busybox openrc>=0.24.1-r6"
 
 
+busybox/APKBUILD
+replaces="busybox-initscripts"
 
+#9 Download main dependencies if only subdepency is included 
+
+libbz2 is a child of bzip2 
+
+#10 relaces keyword 
+
+https://gitlab.alpinelinux.org/alpine/apk-tools/-/issues/10724
+
+See APKBUILD for openssl and lighttp 
+
+ 
 
 
