@@ -41,7 +41,10 @@ $(TEST_MAKEFILE) :
 	echo "CONTAINER_IMAGE = \$$(BASE_OS_IMAGE):\$$(BASE_OS_VERSION)" >> $@
 	echo "" >> $@
 	echo "test:" >> $@
-	echo "\tdocker run   --rm  -i --entrypoint='/usr/local/bin/bom.sh'  --name alpine\$$(ALPINE_VERSION) \$$(CONTAINER_IMAGE) | tee os.bom" >> $@
+	echo "\tdocker run   --rm  -i --entrypoint='/usr/local/bin/bom.sh'   \$$(CONTAINER_IMAGE) | tee os.bom" >> $@
+	echo "" >> $@
+	echo "sh:" >> $@
+	echo "\tdocker run   --rm  -it    \$$(CONTAINER_IMAGE) sh " >> $@
 
 
 test: $(TEST_MAKEFILE)
