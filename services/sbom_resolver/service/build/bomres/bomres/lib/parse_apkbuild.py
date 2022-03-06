@@ -742,6 +742,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             e_path = src['remote']
             e_resolved = e_path.replace('$pkgname', result['pkgname'])
             e_resolved = e_resolved.replace('${pkgname}', result['pkgname'])
+            if '_pkgname' in exp_var_map: 
+               e_resolved = e_resolved.replace('$_pkgname', exp_var_map['_pkgname'])
             e_resolved = e_resolved.replace('${_pkgname}', result['pkgname'])
             e_resolved = e_resolved.replace('$pkgver', result['pkgver'])
             e_resolved = e_resolved.replace('${pkgver}', result['pkgver'])
@@ -759,6 +761,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             i_path = src['local']
             i_resolved = i_path.replace('$pkgname', result['pkgname'])
             i_resolved = i_resolved.replace('${pkgname}', result['pkgname'])
+            if '_pkgname' in exp_var_map: 
+               i_resolved = i_resolved.replace('$_pkgname', exp_var_map['_pkgname'])
             i_resolved = i_resolved.replace('${_pkgname}', result['pkgname'])
             i_resolved = i_resolved.replace('$pkgver', result['pkgver'])
             i_resolved = i_resolved.replace('${pkgver}', result['pkgver'])

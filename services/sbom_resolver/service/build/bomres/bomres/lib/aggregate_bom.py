@@ -60,6 +60,11 @@ def parse_apkindex(buffer):
     temp = {}
     inconsistent = []
     temp['childs'] = []
+    dependencies = {} 
+    dependencies['install'] = [] 
+    dependencies['provide'] = [] 
+    dependencies['depend'] = [] 
+    
     for line in buffer.split('\n'):
         if len(line) > 2:
             if line[0] == 'P':
@@ -78,16 +83,27 @@ def parse_apkindex(buffer):
                 temp['commit'] = line[2:]
             elif line[0] == 'A':
                 temp['arch'] = line[2:]
+            elif line[0] == 'D':
+                dependencies['depend'] = line[2:]
+            elif line[0] == 'p':
+                dependencies['provide'] = line[2:]
+            elif line[0] == 'i':
+                dependencies['install'] = line[2:]
         else:
             if pkgname != "":
                 # End of package definition, assure that all fields exists
                 if 'pkgver' in temp and 'pkgrel' in temp and 'parent' in temp and 'commit' in temp:
+                    temp['struct'] = dependencies
                     apkindex[pkgname] = temp
                 else:
                     inconsistent.append(pkgname)
                 pkgname = ""
                 temp = {}
                 temp['childs'] = []
+                dependencies = {} 
+                dependencies['install'] = [] 
+                dependencies['provide'] = [] 
+                dependencies['depend'] = [] 
 
     # Create list of childrens
     for pkg in apkindex:

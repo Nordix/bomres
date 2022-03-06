@@ -175,6 +175,44 @@ pkgname=busybox-initscripts
 depends="busybox openrc>=0.24.1-r6"
 
 
+
+Start to extract dependency info from APKINDEX. 
+
+"struct": {
+                            "install": [],
+                            "provide": "ifupdown-any cmd:ifupdown=0.11.3-r0",
+                            "depend": "!vlan so:libc.musl-x86_64.so.1"
+                        },
+
+Syntax: 
+
+   depend: 
+    files:   bin/sh
+    libraries: so:libc.musl-x86_64.so.1
+   provide: 
+    /bin/sh cmd:busybox=1.34.1-r4 cmd:sh=1.34.1-r4 ( Example busybox ) 
+    so:libc.musl-x86_64.so.1=1   ( Example musl ) 
+
+
+    !vlan                     # do not install if vlan is installed ? 
+    so:libc.musl-x86_64.so.1  # refers to /lib/libc.musl-x86_64.so.1
+    so:librc.so.1=1           
+
+
+   provide: 
+      cmd:openrc-init=0.44.7-r3     <execute> : <package> = <optional version>
+      so:libeinfo.so.1=1            <develop> : library   = <optional version>
+
+   depend": "openrc>=0.24.1-r6 busybox>=1.26.1-r3 so:libc.musl-x86_64.so.1
+
+
+
+
+
+
+
+
+
 busybox/APKBUILD
 replaces="busybox-initscripts"
 

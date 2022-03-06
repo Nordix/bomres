@@ -9,14 +9,14 @@ BUILDER_IMAGE=alpine_builder
 
 
 BASE_OS_IMAGE=base_os_alpine
-BASE_OS_VERSION=3.15.17
+BASE_OS_VERSION=3.15.18
 
 
 # Labels in Container 
 IMAGE_TITLE="Tool for building Alpine Base OS Container images "
-IMAGE_CREATED="2022-02-26"
+IMAGE_CREATED="2022-03-06"
 IMAGE_REVISION="A"
 IMAGE_VENDOR="Ericsson"
-IMAGE_VERSION=17
+IMAGE_VERSION=18
 IMAGE_AUTHOR=hans.thorsen@ericsson.com
 
