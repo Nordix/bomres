@@ -53,6 +53,68 @@ def run(cmd):
     tmp['stderr'] = child.stderr
     return tmp
 
+def parse_dep(dep, index): 
+    temp = {}
+
+    if 'depend' in dep: 
+     tmp = {}
+     tmp['develop'] = [] 
+     tmp['execute'] = [] 
+     tmp['file'] = [] 
+     tmp['package'] = [] 
+     deps = ' '.join(dep['depend']) 
+     for s in deps.split(): 
+      if re.match(r'^so:.*', s):
+        if re.match(r'^so:.*=.*', s):
+           tmp['develop'].append(s[3:].split('=')[0]) 
+        else: 
+           tmp['develop'].append(s[3:]) 
+      elif re.match(r'^cmd:.*', s):
+        tmp['execute'].append(s[4:])
+      elif re.match(r'^pc:.*', s):
+        pass
+      else: 
+        if re.match(r'.*=.*', s):
+          key = s.split('=')[0]
+          if key in index: 
+             tmp['package'].append(key)
+          else: 
+             tmp['file'].append(key)
+        else: 
+          if s in index: 
+             tmp['package'].append(s)
+          else: 
+             tmp['file'].append(s)
+     temp['depend'] = tmp 
+
+    if 'provide' in dep: 
+     tmp = {}
+     tmp['develop'] = [] 
+     tmp['execute'] = [] 
+     tmp['file'] = [] 
+     deps = ' '.join(dep['provide']) 
+     for s in deps.split(): 
+      if re.match(r'^so:.*', s):
+        if re.match(r'^so:.*=.*', s):
+           tmp['develop'].append(s[3:].split('=')[0]) 
+        else: 
+           tmp['develop'].append(s[3:]) 
+      elif re.match(r'^cmd:.*', s):
+        tmp['execute'].append(s[4:])
+      elif re.match(r'^pc:.*', s):
+        pass
+      else: 
+        if re.match(r'.*=.*', s):
+          key = s.split('=')[0]
+          tmp['file'].append(key)
+        else: 
+          tmp['file'].append(s)
+     temp['provide'] = tmp 
+
+    return temp 
+
+
+
 
 def parse_apkindex(buffer):
     apkindex = {}
@@ -84,16 +146,16 @@ def parse_apkindex(buffer):
             elif line[0] == 'A':
                 temp['arch'] = line[2:]
             elif line[0] == 'D':
-                dependencies['depend'] = line[2:]
+                dependencies['depend'].append(line[2:])
             elif line[0] == 'p':
-                dependencies['provide'] = line[2:]
+                dependencies['provide'].append(line[2:])
             elif line[0] == 'i':
-                dependencies['install'] = line[2:]
+                dependencies['install'].append(line[2:])
         else:
             if pkgname != "":
                 # End of package definition, assure that all fields exists
                 if 'pkgver' in temp and 'pkgrel' in temp and 'parent' in temp and 'commit' in temp:
-                    temp['struct'] = dependencies
+                    temp['struct_raw'] = dependencies
                     apkindex[pkgname] = temp
                 else:
                     inconsistent.append(pkgname)
@@ -164,6 +226,8 @@ def create_index(result):
                     entry['repo'] = repo
                     entry['tag'] = tag
                     index[comp] = entry
+        for ind in index: 
+          index[ind]['struct'] =  parse_dep(index[ind]['struct_raw'], index)
     result['index'] = index
     return result
 
@@ -328,12 +392,12 @@ def format_dep(bom, metadata, desired, settings):
     if 'apkindex' in metadata:
         apk_match = {}
         apk_match['lookup'] = {}
-        apk_match['structure'] = {}
+        apk_match['struct_rawure'] = {}
         apk_match['lookup']['total'] = 0
         apk_match['lookup']['miss'] = 0
         apk_match['lookup']['match'] = 0
-        apk_match['structure']['childs'] = 0
-        apk_match['structure']['parents'] = 0
+        apk_match['struct_rawure']['childs'] = 0
+        apk_match['struct_rawure']['parents'] = 0
     adp_out = {}
     adp_out['dependencies'] = []
     adp_out['modelVersion'] = "1.1"
@@ -376,9 +440,9 @@ def format_dep(bom, metadata, desired, settings):
                                 temp['aggregator']['match'] = True
                                 temp['aggregator']['alpine'] = metadata['index'][s_product]
                                 if s_product != metadata['index'][s_product]['parent']:
-                                    apk_match['structure']['childs'] += 1
+                                    apk_match['struct_rawure']['childs'] += 1
                                 else:
-                                    apk_match['structure']['parents'] += 1
+                                    apk_match['struct_rawure']['parents'] += 1
 
                             else:
                                 temp['aggregator']['match'] = False
