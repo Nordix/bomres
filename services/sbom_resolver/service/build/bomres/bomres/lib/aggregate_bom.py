@@ -11,6 +11,7 @@ import subprocess
 import fnmatch
 import hashlib
 
+from copy import deepcopy
 import tempfile
 
 
@@ -53,9 +54,10 @@ def run(cmd):
     tmp['stderr'] = child.stderr
     return tmp
 
-def parse_dep(dep, index): 
+def parse_dep(ind, index): 
     temp = {}
 
+    dep = index[ind]['struct_raw']
     if 'depend' in dep: 
      tmp = {}
      tmp['develop'] = [] 
@@ -77,12 +79,14 @@ def parse_dep(dep, index):
         if re.match(r'.*=.*', s):
           key = s.split('=')[0]
           if key in index: 
-             tmp['package'].append(key)
+             if 'parent'  in index[key] and key == index[key]['parent']: 
+               tmp['package'].append(key)
           else: 
              tmp['file'].append(key)
         else: 
           if s in index: 
-             tmp['package'].append(s)
+             if 'parent'  in index[s] and s == index[s]['parent']: 
+                tmp['package'].append(s)
           else: 
              tmp['file'].append(s)
      temp['depend'] = tmp 
@@ -111,7 +115,7 @@ def parse_dep(dep, index):
           tmp['file'].append(s)
      temp['provide'] = tmp 
 
-    return temp 
+    return deepcopy(temp)
 
 
 
@@ -226,9 +230,47 @@ def create_index(result):
                     entry['repo'] = repo
                     entry['tag'] = tag
                     index[comp] = entry
+        provide_dict = {} 
+        provide_dict['develop'] = {} 
+        provide_dict['execute'] = {} 
+
         for ind in index: 
-          index[ind]['struct'] =  parse_dep(index[ind]['struct_raw'], index)
+          temp = parse_dep(ind, index)
+
+          if 'provide' in temp and 'develop' in temp['provide']: 
+            for lib in temp['provide']['develop']: 
+              if lib not in provide_dict['develop'] and 'parent' in index[ind]: 
+                 provide_dict['develop'][lib] = index[ind]['parent'] 
+
+          if 'provide' in temp and 'execute' in temp['provide']: 
+            for lib in temp['provide']['execute']: 
+              if lib not in provide_dict['execute'] and 'parent' in index[ind]: 
+                 provide_dict['execute'][lib] = index[ind]['parent'] 
+
+        for ind in index: 
+          temp = parse_dep(ind, index)
+          temp_struct = {}  
+          temp_struct['develop'] = {}  
+          temp_struct['execute'] = {}  
+          temp_struct['package'] = {}  
+
+          if 'depend' in temp and 'package' in temp['depend']: 
+             temp_struct['package']= temp['depend']['package']
+             
+          if 'depend' in temp and 'develop' in temp['depend']: 
+            for lib in temp['depend']['develop']: 
+              if lib in provide_dict['develop']: 
+                 temp_struct['develop'][lib] = provide_dict['develop'][lib] 
+             
+          if 'depend' in temp and 'execute' in temp['depend']: 
+            for lib in temp['depend']['execute']: 
+              if lib in provide_dict['execute']: 
+                 temp_struct['execute'][lib] = provide_dict['execute'][lib] 
+            
+          index[ind]['depends'] = temp_struct
+          
     result['index'] = index
+    result['provide'] = provide_dict 
     return result
 
 

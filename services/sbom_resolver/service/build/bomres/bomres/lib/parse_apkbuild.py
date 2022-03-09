@@ -947,6 +947,8 @@ def scan_aports(checkout_dir, apkindex):
                         stats['parse'][name] = parse_info
                     if len(temp) > 0:
                         result[name] = temp
+                        if name in apkindex['index'] and 'struct' in apkindex['index'][name]: 
+                           result[name]['struct'] = apkindex['index'][name]['struct']
                         if 'childs' in result[name]:
                             for child in result[name]['childs']:
                                 child_entry = {}

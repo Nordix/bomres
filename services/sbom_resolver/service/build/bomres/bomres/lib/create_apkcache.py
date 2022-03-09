@@ -142,7 +142,7 @@ def main():
     entry_exists, cache_index_file, aports_info, age = create_cache(
         args.src, pull_branch, args.checkout, args.cache, apk_index_dict)
 
-   # Dictionairy for parsing command line args and options.
+   # Dictionary for parsing command line args and options.
 args_options = {
     'opt':
     [
