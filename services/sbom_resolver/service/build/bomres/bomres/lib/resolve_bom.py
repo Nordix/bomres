@@ -158,6 +158,8 @@ def mapper(comp_dict, alpine_dict, debug=False):
                 else:
                     # Subpackages defined in aports
                     if alpine_dict['map'][prod]['parent'] != prod:
+                        if 'depend' in alpine_dict['map'][prod]:
+                            comp['aggregate']['depend'] = alpine_dict['map'][prod]['depend']
                         stats['children'] = stats['children'] + 1
                         comp['aggregate'] = {}
                         comp['aggregate']['parent'] = alpine_dict['map'][prod]['parent']
@@ -172,6 +174,10 @@ def mapper(comp_dict, alpine_dict, debug=False):
                     elif comp['pipeline']['aggregator']['alpine']['parent'] != prod:
                         stats['children'] = stats['children'] + 1
                         comp['aggregate']['info'] = {}
+
+                        if 'depend' in alpine_dict['map'][prod]:
+                            comp['aggregate']['depend'] = alpine_dict['map'][prod]['depend']
+
                         comp['aggregate']['info']['text'] = "This package is a subpackage of %s" % comp['pipeline']['aggregator']['alpine']['parent']
                         if debug:
                             sys.stdout.write("This is children of parent %s APKINDEX\n" %
@@ -183,6 +189,10 @@ def mapper(comp_dict, alpine_dict, debug=False):
                         comp['aggregate'] = {}
                         comp['aggregate']['match'] = 'product_version_match'
                         comp['aggregate']['parent'] = alpine_dict['map'][prod]['parent']
+
+                        if 'depend' in alpine_dict['map'][prod]:
+                            comp['aggregate']['depend'] = alpine_dict['map'][prod]['depend']
+
                         if 'download' in alpine_dict['map'][prod]:
                             comp['aggregate']['source'] = alpine_dict['map'][prod]['download']
                         if 'security' in alpine_dict['map'][prod]:
