@@ -55,7 +55,7 @@ info:
     </ul>
 
 
-  version: "1.0.24"
+  version: "1.0.25"
   x-api-id: d3571587-2efd-4a6c-ab31-e7c1c9639843
   x-audience: external-public
   contact:
@@ -84,6 +84,7 @@ tags:
 paths: 
   /liveness:
     get:
+      operationId: api.liveness.search
       tags:
         - Monitoring
       summary:
@@ -107,6 +108,7 @@ paths:
 
   /readyness:
     get:
+      operationId: api.readyness.search
       tags:
         - Monitoring
       summary:
@@ -135,6 +137,7 @@ paths:
       - $ref: '#/components/parameters/FlowId'
       - $ref: '#/components/parameters/Authorization'
     post:
+      operationId: api.token.post
       tags:
         - Auth
       summary: 'JSON Web Token (JWT)'
@@ -201,6 +204,7 @@ paths:
       - $ref: '#/components/parameters/FlowId'
       - $ref: '#/components/parameters/Authorization'
     post:
+      operationId: api.file.post
       tags:
         - Aports 
       summary:
@@ -258,6 +262,7 @@ paths:
       - $ref: '#/components/parameters/Authorization'
 
     post:
+      operationId: api.src.post
       tags:
         - Aports 
       summary:
@@ -299,6 +304,7 @@ paths:
 
 
     get:
+      operationId: api.src.search
       tags:
         - Aports 
       summary:
@@ -329,6 +335,7 @@ paths:
       - $ref: '#/components/parameters/FlowId'
       - $ref: '#/components/parameters/Authorization'
     delete:
+      operationId: api.src.delete
       tags:
         - Aports 
       summary:
@@ -384,6 +391,7 @@ paths:
 
   /index:
     post:
+      operationId: api.index.post
       tags:
         - Apkindex
       summary:
@@ -634,6 +642,7 @@ paths:
       - $ref: '#/components/parameters/Authorization'
 
     post:
+      operationId: api.aggregate.post
       tags:
         - SBOM
       summary: Upload metadata from a software build
@@ -685,6 +694,7 @@ paths:
 
   /resolve:
     post:
+      operationId: api.resolve.post
       tags:
         - SBOM 
       summary:

@@ -34,5 +34,6 @@ EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-# Currently the singlethreaded development server
-CMD [ "server"]
+# three options for serving requests 
+# server , uwsgi or gunicorn 
+CMD [ "gunicorn"]

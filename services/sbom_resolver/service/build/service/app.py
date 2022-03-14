@@ -74,41 +74,38 @@ def load_openapi(path):
     return xapi_id, title, server_url
 
 
-def main():
+os.environ["TOKENINFO_FUNC"] = "app.verifyToken"
 
-    os.environ["TOKENINFO_FUNC"] = "app.verifyToken"
+logging.config.dictConfig(logging_config)
+logger = logging.getLogger()
 
-    logging.config.dictConfig(logging_config)
-    logger = logging.getLogger()
-
-    openapi_spec = 'openapi.yaml'
-    xapi_id, title, server_url = load_openapi(openapi_spec)
-    if xapi_id is None:
+openapi_spec = 'openapi.yaml'
+xapi_id, title, server_url = load_openapi(openapi_spec)
+if xapi_id is None:
         sys.stderr.write("Could not extract x-api-id from %s\n" % openapi_spec)
         sys.exit(1)
 
-    app = connexion.FlaskApp(__name__)
+app = connexion.App(__name__)
+app.add_api(openapi_spec)
+#app.add_api(openapi_spec, resolver=RestyResolver('api'))
 
-    with app.app.app_context():
-        current_app.logger = logger
-        current_app.xapiid = xapi_id
-        current_app.title = title
-        current_app.server_url = server_url
-        current_app.version = connexion.__version__
+with app.app.app_context():
+     current_app.logger = logger
+     current_app.xapiid = xapi_id
+     current_app.title = title
+     current_app.server_url = server_url
+     current_app.version = connexion.__version__
 
-    app.add_api(openapi_spec, resolver=RestyResolver('api'))
 
-    CORS(app.app)
+CORS(app.app)
 
-    logger.debug("Start version of connexion: " + connexion.__version__)
+logger.debug("Start version of connexion: " + connexion.__version__)
 
-    app.run(
-        port=int(os.getenv('TARGETPORT', '8080')),
-        use_reloader=False,
-        threaded=False,
-        debug=True
-    )
 
+application = app.app
 
 if __name__ == '__main__':
-    main()
+    # run our standalone gevent server
+    app.run(port=8080, server='gevent')
+
+
