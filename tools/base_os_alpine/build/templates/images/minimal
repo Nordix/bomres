@@ -1,16 +1,7 @@
 # 
-# This is as small Alpine distro installed by init 
-# There is other examples in the template directory
+# This is the reference image 
 #
-alpine-conf
-alpine-keys
-apk-tools
 alpine-base
-alpine-baselayout
-musl
-busybox
-libc6-compat
-util-linux
 
 lighttpd #S
 

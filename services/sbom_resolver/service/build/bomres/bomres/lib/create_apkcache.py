@@ -97,7 +97,7 @@ def prepare_aports_cache(aport_dir, dst_cache_dir, repo, commit_hash):
 
 
 def create_cache(aports_src, pull_branch,
-                 aports_checkout, aports_cache, apkindex):
+                 aports_checkout, aports_cache, apkindex, debug):
     age = 0 
     cache_index_file = "%s/APKINDEX-%s.json" % (
         aports_cache, apkindex['hash'])
@@ -118,6 +118,9 @@ def create_cache(aports_src, pull_branch,
         aports_info = git_manager.info("%s/aports" % aports_src)
         for repo in apkindex['repos']:
             commit_hash = apkindex['repos'][repo]['hash']
+            commit_tag = apkindex['repos'][repo]['tag']
+            if debug: 
+               sys.stdout.write("checkout tag %s\n" % commit_tag) 
             tmp = git_manager.checkout(commit_hash, "%s/aports" % aports_src)
             prepare_aports_cache(
                 "%s/aports" %
@@ -140,7 +143,7 @@ def main():
     apk_index_dict = import_json(args.apkindex)
 
     entry_exists, cache_index_file, aports_info, age = create_cache(
-        args.src, pull_branch, args.checkout, args.cache, apk_index_dict)
+        args.src, pull_branch, args.checkout, args.cache, apk_index_dict, args.debug )
 
    # Dictionary for parsing command line args and options.
 args_options = {

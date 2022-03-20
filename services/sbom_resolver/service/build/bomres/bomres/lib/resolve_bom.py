@@ -258,7 +258,7 @@ def main():
         cache_path = Path(index_path)
         if not cache_path.exists():
             sys.stderr.write(
-                "Entry does not exists in cache, please generate index \n")
+                "Entry does not exists in cache, please generate index [%s]\n" % hash)
             sys.exit(1)
 
         alpine_dict = import_json(index_path)

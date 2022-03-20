@@ -1,7 +1,7 @@
 
 # Setting for Alpine
 
-ALPINE_VERSION=3.14
+ALPINE_VERSION=3.15
 ARCH=x86_64
 REPO_URL=http://dl-cdn.alpinelinux.org/alpine
 
@@ -9,12 +9,12 @@ BUILDER_IMAGE=alpine_builder
 
 
 BASE_OS_IMAGE=alpine_sandbox_base_os
-BASE_OS_VERSION=3.14.1
+BASE_OS_VERSION=3.15.1
 
 
 # Labels in Container
 IMAGE_TITLE="Alpine Base OS Image"
-IMAGE_CREATED="2022-01-17"
+IMAGE_CREATED="2022-03-20"
 IMAGE_REVISION="A"
 IMAGE_VENDOR="Lammda"
 IMAGE_VERSION=1
