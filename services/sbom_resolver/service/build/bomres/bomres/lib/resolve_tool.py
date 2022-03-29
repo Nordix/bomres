@@ -91,20 +91,17 @@ def get_tools(sbom,  debug):
       s =  s + "#" + "\n" 
       s =  s + "#" + "\n" 
       tmp = sbom["metadata"]["aggregator"]["alpine"]["settings"]
+
+      # Write section in desired tool SBOM that connects to product 
+
       for k in tmp: 
        s =  s + "# " + k + "=" + tmp[k] + "\n" 
       s =  s + "#" + "\n\n" 
 
       s =  s + "# Minimal Alpine Base OS" + "\n\n" 
-      s =  s + "alpine-conf" + "\n" 
-      s =  s + "alpine-keys" + "\n" 
-      s =  s + "apk-tools" + "\n" 
       s =  s + "alpine-base" + "\n" 
-      s =  s + "alpine-baselayout" + "\n" 
-      s =  s + "musl" + "\n" 
-      s =  s + "busybox" + "\n" 
-      s =  s + "libc6-compat" + "\n" 
       s =  s + "util-linux" + "\n" 
+
       s =  s + "# Common Build tools" + "\n\n" 
       s =  s + "alpine-sdk" + "\n" 
       s =  s + "build-base" + "\n" 
