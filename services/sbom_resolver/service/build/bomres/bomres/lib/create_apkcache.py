@@ -121,7 +121,7 @@ def create_cache(aports_src, pull_branch,
             commit_tag = apkindex['repos'][repo]['tag']
             if debug: 
                sys.stdout.write("checkout tag %s\n" % commit_tag) 
-            tmp = git_manager.checkout(commit_hash, "%s/aports" % aports_src)
+            tmp = git_manager.checkout(commit_tag, "%s/aports" % aports_src)
             prepare_aports_cache(
                 "%s/aports" %
                 aports_src,

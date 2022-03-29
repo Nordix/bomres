@@ -434,12 +434,12 @@ def format_dep(bom, metadata, desired, settings):
     if 'apkindex' in metadata:
         apk_match = {}
         apk_match['lookup'] = {}
-        apk_match['struct_rawure'] = {}
+        apk_match['structure'] = {}
         apk_match['lookup']['total'] = 0
         apk_match['lookup']['miss'] = 0
         apk_match['lookup']['match'] = 0
-        apk_match['struct_rawure']['childs'] = 0
-        apk_match['struct_rawure']['parents'] = 0
+        apk_match['structure']['childs'] = 0
+        apk_match['structure']['parents'] = 0
     adp_out = {}
     adp_out['dependencies'] = []
     adp_out['modelVersion'] = "1.1"
@@ -482,9 +482,9 @@ def format_dep(bom, metadata, desired, settings):
                                 temp['aggregator']['match'] = True
                                 temp['aggregator']['alpine'] = metadata['index'][s_product]
                                 if s_product != metadata['index'][s_product]['parent']:
-                                    apk_match['struct_rawure']['childs'] += 1
+                                    apk_match['structure']['childs'] += 1
                                 else:
-                                    apk_match['struct_rawure']['parents'] += 1
+                                    apk_match['structure']['parents'] += 1
 
                             else:
                                 temp['aggregator']['match'] = False
