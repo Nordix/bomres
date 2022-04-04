@@ -112,6 +112,11 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
 
     START_MAKECHECK = 'makedepends="'
     STATE_MAKECHECK = False
+
+    START_DEVCHECK = 'depends_dev="'
+    STATE_DEVCHECK = False
+
+
     #
     #  Open APKBUILD and process line by line in state machine
     #
@@ -391,6 +396,56 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
                 temp = fi
                 if temp not in result['checkdepends']:
                    result['checkdepends'].append(temp)
+
+
+
+        if (STATE_DEVCHECK):
+            # This entry handles entries after start and before end
+            tmp = s.lstrip()
+            tmp = tmp.strip('"')
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                if fi not in result['makedepends']:
+                   result['makedepends'].append(fi)
+
+        if (s.startswith(START_DEVCHECK) and s.endswith('"')):
+            # One line
+            tmp = s.split(START_DEVCHECK)[1]
+            tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
+            # makedepends="" 
+            if not s.endswith('""'): 
+              STATE_DEVCHECK = True
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                STATE_DEVCHECK = False
+                if fi not in result['makedepends']:
+                   result['makedepends'].append(fi)
+
+        elif (s.startswith(START_DEVCHECK)):
+            # multiline
+            STATE_DEVCHECK = True
+            tmp = s.split(START_DEVCHECK)[1]
+            tmp = tmp.lstrip()
+            tmp = tmp.rstrip('"')
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                if fi not in result['makedepends']:
+                   result['makedepends'].append(fi)
+
+        if (STATE_DEVCHECK and s.endswith('"')):
+            # End of multiline makedepends section
+            tmp = s.lstrip()
+            if not s.startswith(START_DEVCHECK): 
+               STATE_DEVCHECK = False
+            else: 
+               tmp = tmp.split(START_DEVCHECK)[1]
+            tmp = tmp.strip('"')
+            for fi in tmp.split():  
+              if len(fi) > 0:
+                temp = fi
+                if temp not in result['makedepends']:
+                   result['makedepends'].append(temp)
 
 
         if (STATE_MAKECHECK):
