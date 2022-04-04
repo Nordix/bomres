@@ -160,6 +160,7 @@ def mapper(comp_dict, alpine_dict, debug=False):
                     if alpine_dict['map'][prod]['parent'] != prod:
                         if 'depend' in alpine_dict['map'][prod]:
                             comp['aggregate']['depend'] = alpine_dict['map'][prod]['depend']
+                            #pprint.pprint(alpine_dict['map'][prod]['depend']) 
                         stats['children'] = stats['children'] + 1
                         comp['aggregate'] = {}
                         comp['aggregate']['parent'] = alpine_dict['map'][prod]['parent']

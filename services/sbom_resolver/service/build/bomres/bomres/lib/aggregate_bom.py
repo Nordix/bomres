@@ -54,10 +54,13 @@ def run(cmd):
     tmp['stderr'] = child.stderr
     return tmp
 
-def parse_dep(ind, index): 
+def parse_dep(ind, index, debug): 
     temp = {}
 
+
     dep = index[ind]['struct_raw']
+
+
     if 'depend' in dep: 
      tmp = {}
      tmp['develop'] = [] 
@@ -104,7 +107,12 @@ def parse_dep(ind, index):
         else: 
            tmp['develop'].append(s[3:]) 
       elif re.match(r'^cmd:.*', s):
-        tmp['execute'].append(s[4:])
+        cmd_tmp = s[4:]
+        key = cmd_tmp.split('=')[0]
+        #if debug: 
+        #   print(key) 
+        #tmp['execute'].append(s[4:])
+        tmp['execute'].append(key)
       elif re.match(r'^pc:.*', s):
         pass
       else: 
@@ -114,13 +122,16 @@ def parse_dep(ind, index):
         else: 
           tmp['file'].append(s)
      temp['provide'] = tmp 
+     #if debug: 
+     #  print(temp['provide']) 
 
+    return temp
     return deepcopy(temp)
 
 
 
 
-def parse_apkindex(buffer):
+def parse_apkindex(buffer, debug):
     apkindex = {}
     pkgname = ""
     temp = {}
@@ -213,7 +224,7 @@ def unpack_embedded_tarballs(root_dir):
     return result
 
 
-def create_index(result):
+def create_index(result, debug):
     if 'apkindex' in result:
         if len(result['apkindex']) != 1:
             tmp = {}
@@ -235,20 +246,29 @@ def create_index(result):
         provide_dict['execute'] = {} 
 
         for ind in index: 
-          temp = parse_dep(ind, index)
+          temp = parse_dep(ind, index, debug)
 
           if 'provide' in temp and 'develop' in temp['provide']: 
             for lib in temp['provide']['develop']: 
               if lib not in provide_dict['develop'] and 'parent' in index[ind]: 
-                 provide_dict['develop'][lib] = index[ind]['parent'] 
+                 provide_entry  = {} 
+                 provide_entry['parent'] = index[ind]['parent'] 
+                 if ind != index[ind]['parent']: 
+                    provide_entry['child'] = ind
+                 provide_dict['develop'][lib] = provide_entry
 
           if 'provide' in temp and 'execute' in temp['provide']: 
             for lib in temp['provide']['execute']: 
               if lib not in provide_dict['execute'] and 'parent' in index[ind]: 
-                 provide_dict['execute'][lib] = index[ind]['parent'] 
+                 provide_entry  = {}
+                 provide_entry['parent'] = index[ind]['parent']
+                 if ind != index[ind]['parent']: 
+                    provide_entry['child'] = ind
+                 provide_dict['execute'][lib] = provide_entry
+
 
         for ind in index: 
-          temp = parse_dep(ind, index)
+          temp = parse_dep(ind, index, debug)
           temp_struct = {}  
           temp_struct['develop'] = {}  
           temp_struct['execute'] = {}  
@@ -290,7 +310,7 @@ def commit_map(result):
     return result
 
 
-def process_tarball(tarball, create_commit_map=False):
+def process_tarball(tarball, debug, create_commit_map=False):
     dirpath = tempfile.mkdtemp()
     CWD = os.getcwd()
     os.chdir(dirpath)
@@ -332,7 +352,7 @@ def process_tarball(tarball, create_commit_map=False):
                 if repo not in result['apkindex'][tag]:
                     result['apkindex'][tag][repo] = {}
 
-                temp = parse_apkindex(APKINDEX)
+                temp = parse_apkindex(APKINDEX, debug)
                 result['apkindex'][tag][repo]['APKINDEX'] = temp['apkindex']
                 result['apkindex'][tag][repo]['inconsistent'] = temp['inconsistent']
                 result['apkindex'][tag][repo]['arch'] = arch
@@ -359,7 +379,7 @@ def process_tarball(tarball, create_commit_map=False):
     os.chdir(CWD)
     shutil.rmtree(dirpath)
 
-    result = create_index(result)
+    result = create_index(result, debug)
     if create_commit_map == True:
         result = commit_map(result)
     return result
@@ -429,7 +449,7 @@ def process_resolved_bom(os_bom):
     return tmp, syntax
 
 
-def format_dep(bom, metadata, desired, settings):
+def format_dep(bom, metadata, desired, settings, debug):
 
     if 'apkindex' in metadata:
         apk_match = {}
@@ -494,6 +514,8 @@ def format_dep(bom, metadata, desired, settings):
                         node['ID'] = idx
                         node['pipeline'] = temp
                         node['mapper'] = mapper
+                        #if debug: 
+                        #   pprint.pprint(node) 
                         adp_out['dependencies'].append(node)
 
     if 'apkindex' in metadata:
@@ -570,15 +592,14 @@ def main():
         fp = open(args.pkgindex, "rb")
         buf = fp.read()
         fp.close()
-        alpine_apk_index = process_tarball(buf, create_commit_map=True)
         try:
             fp = open(args.pkgindex, "rb")
             buf = fp.read()
             fp.close()
             if args.index:
-                alpine_apk_index = process_tarball(buf, create_commit_map=True)
+                alpine_apk_index = process_tarball(buf, debug, create_commit_map=True)
             else:
-                alpine_apk_index = process_tarball(buf)
+                alpine_apk_index = process_tarball(buf, debug)
         except BaseException:
             sys.stderr.write("Error processing %s\n" % args.pkgindex)
             sys.exit(1)
@@ -628,7 +649,7 @@ def main():
                 resolved,
                 alpine_apk_index,
                 desired,
-                settings))
+                settings, debug))
         try:
             fp = open(args.output, "w")
             fp.write(json)

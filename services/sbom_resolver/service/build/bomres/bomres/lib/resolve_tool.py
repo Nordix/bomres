@@ -83,6 +83,34 @@ def get_tools(sbom,  debug):
     # Populate cache with external code, required for rebuild
     #
 
+    primary_deps = [] 
+    for comp in sbom['dependencies']: 
+     product = comp['pipeline']['product'] 
+     parent = comp['pipeline']['aggregator']['alpine']['parent'] 
+     if parent not in primary_deps and product == parent: 
+        primary_deps.append(parent) 
+
+
+    second_main = {} 
+    for comp in sbom['dependencies']: 
+     product = comp['pipeline']['product'] 
+     if product  in primary_deps: 
+       parent = comp['pipeline']['aggregator']['alpine']['parent'] 
+       if parent in primary_deps: 
+        develop = comp['pipeline']['aggregator']['alpine']['depends']['develop']
+        for lib in develop: 
+          dev_parent = develop[lib]['parent'] 
+          if dev_parent not in primary_deps: 
+            if dev_parent not in second_main: 
+             second_main[dev_parent] = {}
+             second_main[dev_parent][product] = []
+             second_main[dev_parent][product].append(lib) 
+            else: 
+             if product not in second_main[dev_parent]: 
+               second_main[dev_parent][product] = []
+             second_main[dev_parent][product].append(lib) 
+
+
     # Different repos have different repository states
     s = ""
     if 'tools' in sbom: 
@@ -106,10 +134,30 @@ def get_tools(sbom,  debug):
       s =  s + "alpine-sdk" + "\n" 
       s =  s + "build-base" + "\n" 
       s =  s + "abuild" + "\n" 
-      s =  s + "\n# Additional tools needed for specific packages " + "\n\n" 
+      s =  s + "\n#-----------------------------------------------------------------\n" 
+      s =  s + "\n# Development tools" + "\n\n" 
+      s =  s + "\n# Additional tools needed for specific packages during build " + "\n" 
+      s =  s + "\n#-----------------------------------------------------------------\n\n" 
       for id in sbom['tools']:
-            s = s + "#            "  + " ".join(sbom['tools'][id]) + "\n"
-            s = s + id + "\n"
+            s = s + "# "  + " ".join(sbom['tools'][id]) + "\n"
+            s = s + id + "\n\n"
+
+      if len(second_main) > 0 : 
+        s =  s + "\n#-----------------------------------------------------------------\n" 
+        s =  s + "\n# Secondary product dependencies" + "\n\n" 
+        s =  s + "\n# Additional packages needed for building the product " + "\n" 
+        s =  s + "\n# Packages listed here must either be removed ( hardening ) or included in product desired SBOM" + "\n" 
+        s =  s + "\n#-----------------------------------------------------------------\n\n" 
+        for sec in second_main: 
+            s = s + "# "  + sec + "\n"
+            for prim in second_main[sec]: 
+              if prim != sec: 
+                s = s + "#   "  + prim + "         " + " ".join(second_main[sec][prim]) + "\n"
+            s = s +  "\n"
+        s = s +  "\n"
+        for sec in second_main: 
+            s = s + sec + "\n"
+          
     return s
 
 

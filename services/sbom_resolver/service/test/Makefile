@@ -3,11 +3,13 @@
 CLIENT_ID=product
 CLIENT_SECRET=qwerty
 
-TOKEN_URL=https://lb.t2data.com/resolver/alpine/v1
 TOKEN_URL=http://localhost:8080/resolver/alpine/v1
+TOKEN_URL=https://lb.t2data.com/resolver/alpine/v1
+TOKEN_URL=https://lb.t2data.com/token/v1
+#TOKEN_URL=https://compliance-cicd.internal.ericsson.com/token/v2
 
-URL=https://lb.t2data.com
 URL=http://localhost:8080
+URL=https://lb.t2data.com
 
 TOOLS_REPO      = docker.io/bomres
 ALPINE_BUILDER  = base_os_alpine:latest
@@ -94,7 +96,12 @@ container_aggregate:
 
 python_aggregate:
 	python3  ../build/bomres/bomres/lib/aggregate_bom.py  --pkgindex $(PWD)/$(DIR)/build/base_os/sbom/apkindex.tar    --desired $(PWD)/$(DIR)/build/base_os/sbom/os.conf  \
-                          --resolved $(PWD)/$(DIR)/build/base_os/sbom/os.bom  --config $(PWD)/$(DIR)/build/base_os/config/settings  --output $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json 
+                          --resolved $(PWD)/$(DIR)/build/base_os/sbom/os.bom  --config $(PWD)/$(DIR)/build/base_os/config/settings  --output $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json #  --debug
+
+
+pi: 
+	@rm -f  $(PWD)/$(DIR)/build/base_os/sbom/index.json 
+	python3  ../build/bomres/bomres/lib/aggregate_bom.py      --pkgindex $(PWD)/$(DIR)/build/base_os/sbom/apkindex.tar   --output   $(PWD)/$(DIR)/build/base_os/sbom/index.json
 
 
 python_index: 
@@ -110,7 +117,7 @@ python_index:
 
 
 python_resolve: 
-	python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json    --cache /tmp/alpine/cache         --output $(PWD)/$(DIR)/build/base_os/sbom/resolved.json # --debug 
+	python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json    --cache /tmp/alpine/cache         --output $(PWD)/$(DIR)/build/base_os/sbom/resolved.json #  --debug 
 
 
 python_file: 
@@ -125,7 +132,7 @@ python_file:
 
 ptool: 
 	python3 ../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json  --packages
-	python3 ../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json  --settings
+	#python3 ../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json  --settings
 
 pctool: 
 	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom"   $(CONTAINER_IMAGE) tool
