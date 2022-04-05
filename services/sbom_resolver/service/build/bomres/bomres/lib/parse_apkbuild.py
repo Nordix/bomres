@@ -75,9 +75,22 @@ def handle_double_colon(string):
         return result
 
 
-def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
+def parse_apkbuild_manifest(name, repository, path, repo_hash_dict, apkbuild):
 
     
+    """
+Change state machine to include install scripts for openldap 2022-04-05
+opendlap
+
+install="
+        $pkgname.pre-install
+        $pkgname.post-install
+        $pkgname.pre-upgrade
+        $pkgname.post-upgrade
+        $pkgname-lloadd.pre-install
+        "
+    """
+
     parse_info = {}
     result = {}
     result['repository'] = repository
@@ -267,6 +280,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             tmp = tmp.lstrip()
             tmp = tmp.rstrip('"')
             for fi in tmp.split():  
+              if name == "openldap": 
+                print("DEBUG-11 (%s)" % fi) 
               if len(fi) > 0:
                 STATE_INSTALL = False
                 temp = handle_double_colon(fi)
@@ -285,7 +300,7 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
                 if temp not in result['source']:
                     result['source'].append(temp)
 
-        if (STATE_INSTALL and s.endswith('"')):
+        elif (STATE_INSTALL and s.endswith('"')):
             # End of multiline source section
             STATE_INSTALL = False
             if s.startswith(START_INSTALL): 
@@ -294,6 +309,8 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
             else: 
               tmp = s.lstrip()
             tmp = tmp.strip('"')
+            if name == "openldap": 
+               print("DEBUG-2 [%s]" % tmp) 
             for fi in tmp.split():  
               if len(fi) > 0:
                 temp = handle_double_colon(fi)
@@ -746,7 +763,15 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         tool_dep.append(entry) 
       if 'tools' not in result: 
          result['tools'] = {}
-      result['tools']['makedepends'] = tool_dep
+      tmp_tool_dep = {} 
+      for p in tool_dep: 
+        try: 
+         if p in apkbuild['index'] and 'parent' in apkbuild['index'][p]: 
+          tmp_tool_dep[p] = {} 
+          tmp_tool_dep[p]['parent'] = apkbuild['index'][p]['parent']
+        except: 
+          sys.stderr.write("Problem parsing tools/makedepends\n")  
+      result['tools']['makedepends'] = tmp_tool_dep
     
     check_dep = [] 
 
@@ -771,7 +796,15 @@ def parse_apkbuild_manifest(name, repository, path, repo_hash_dict):
         check_dep.append(entry) 
       if 'tools' not in result: 
          result['tools'] = {}
-      result['tools']['checkdepends'] = check_dep
+      tmp_check_dep = {} 
+      for p in check_dep: 
+        try: 
+         if p in apkbuild['index'] and 'parent' in apkbuild['index'][p]: 
+          tmp_check_dep[p] = {} 
+          tmp_check_dep[p]['parent'] = apkbuild['index'][p]['parent']
+        except: 
+          sys.stderr.write("Problem parsing tools/checkdepends\n")  
+      result['tools']['checkdepends'] = tmp_check_dep
     
     # source section consists of the following entries
     #  external code with url ://
@@ -996,7 +1029,7 @@ def scan_aports(checkout_dir, apkindex):
                     filename_commit = resolve_apkindex_file(
                         filename, repository, repo_hash_dict)
                     temp, parse_info = parse_apkbuild_manifest(
-                        name, repository, filename_commit, repo_hash_dict)
+                        name, repository, filename_commit, repo_hash_dict, apkindex)
                     cnt = cnt + 1
                     if len(parse_info) > 0:
                         stats['parse'][name] = parse_info

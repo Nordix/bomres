@@ -138,9 +138,19 @@ def get_tools(sbom,  debug):
       s =  s + "\n# Development tools" + "\n\n" 
       s =  s + "\n# Additional tools needed for specific packages during build " + "\n" 
       s =  s + "\n#-----------------------------------------------------------------\n\n" 
+      tools = {} 
       for id in sbom['tools']:
-            s = s + "# "  + " ".join(sbom['tools'][id]) + "\n"
-            s = s + id + "\n\n"
+        i = 0 
+        for comp in sbom['tools'][id]:
+          pkg = sbom['tools'][id][i]['child'] 
+          if pkg  not in tools: 
+             tools[pkg] = [] 
+          if id not in tools[pkg]: 
+              tools[pkg].append(id) 
+          i = i + 1 
+      for id in tools:
+        s = s + "# "  + " ".join(tools[id]) + "\n"
+        s = s + id + "\n\n"
 
       if len(second_main) > 0 : 
         s =  s + "\n#-----------------------------------------------------------------\n" 
