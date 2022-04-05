@@ -221,6 +221,8 @@ retrieve_source:
 base_os_config: config $(DIR)/test/Makefile
 base_os: base_os_config init  prepare public_build download private_build test 
 
+hans: public_build download private_build test container_aggregate python_index python_resolve
+
 test_cycle: clean base_os container_aggregate python_index python_resolve 
 
 tool: index resolve 

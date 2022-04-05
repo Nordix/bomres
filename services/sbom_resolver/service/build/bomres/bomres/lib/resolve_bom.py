@@ -75,27 +75,13 @@ def export_json(inp):
     return y
 
 def list_of_tools(prod,alpine_dict): 
-    """
-    1. concatenate build/check dependencies 
-
-           "tools": {
-                "makedepends": [
-                    "py3-setuptools"
-                ],
-                "checkdepends": [
-                    "py3-pytest"
-                ]
-            }
-    """
     tmp = [] 
     for kind in alpine_dict['map'][prod]['tools']: 
         for pkg in alpine_dict['map'][prod]['tools'][kind]: 
             # APKBUILD for libc-dev have some empty variables listed in makedepends
-            try: 
-             if pkg in alpine_dict['map']: 
-              tmp.append(pkg) 
-            except: 
-              pass
+            temp = alpine_dict['map'][prod]['tools'][kind][pkg]
+            temp['child'] = pkg 
+            tmp.append(temp) 
     return tmp
 
 
@@ -212,13 +198,8 @@ def mapper(comp_dict, alpine_dict, debug=False):
                             pprint.pprint(alpine_dict['map'][prod])
                         if 'tools' in alpine_dict['map'][prod]:
                             temp = list_of_tools(prod,alpine_dict)
-                            for pkg in temp: 
-                             try: 
-                              if pkg not in  tool_dict :
-                                 tool_dict[pkg] = []
-                              tool_dict[pkg].append(prod)
-                             except: 
-                              pass
+                            if len(temp) > 0: 
+                               tool_dict[prod] = list_of_tools(prod,alpine_dict)
                     else:
                         comp['aggregate'] = {}
                         comp['aggregate']['match'] = 'product_match'
