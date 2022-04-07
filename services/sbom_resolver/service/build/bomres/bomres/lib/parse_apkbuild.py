@@ -8,6 +8,9 @@ import subprocess
 import yaml
 import argparse
 
+from pathlib import Path
+
+
 
 try:
     from StringIO import StringIO
@@ -75,7 +78,7 @@ def handle_double_colon(string):
         return result
 
 
-def parse_apkbuild_manifest(name, repository, path, repo_hash_dict, apkbuild):
+def parse_apkbuild_manifest(name, repository, path, repo_hash_dict, apkbuild, repolink):
 
     
     """
@@ -98,6 +101,7 @@ install="
     result['source'] = []
     result['checkdepends'] = []
     result['makedepends'] = []
+    result['repolink'] = repolink
 
     STATE_SRC = False
     START_SRC = 'source="'
@@ -280,8 +284,6 @@ install="
             tmp = tmp.lstrip()
             tmp = tmp.rstrip('"')
             for fi in tmp.split():  
-              if name == "openldap": 
-                print("DEBUG-11 (%s)" % fi) 
               if len(fi) > 0:
                 STATE_INSTALL = False
                 temp = handle_double_colon(fi)
@@ -309,8 +311,6 @@ install="
             else: 
               tmp = s.lstrip()
             tmp = tmp.strip('"')
-            if name == "openldap": 
-               print("DEBUG-2 [%s]" % tmp) 
             for fi in tmp.split():  
               if len(fi) > 0:
                 temp = handle_double_colon(fi)
@@ -870,7 +870,7 @@ install="
 
             find_url = e_resolved.split('://')
             if len(find_url) == 2:
-                if re.findall(r'.*?patch$', e_resolved):
+                if re.findall(r'.*[\-]*?patch$', e_resolved):
                     # External patch
                     tmp = {}
                     tmp['remote'] = {}
@@ -897,7 +897,7 @@ install="
                         result['download']['external']['code'].append(tmp)
                         prevent_duplicates[e_resolved] = e_resolved
             else:
-                if re.findall(r'.*?patch$', e_resolved):
+                if re.findall(r'.*[\-]*?patch$', e_resolved):
                     # Internal patch , remote url must be retrived with git ,
                     # url, commit and path
                     tmp = {}
@@ -1017,37 +1017,56 @@ def scan_aports(checkout_dir, apkindex):
     repo_hash_dict = get_package_repo_from_bom(repos)
     result = {}
     cnt = 0
-    for filename in glob.iglob(checkout_dir + '**/**', recursive=True):
-        comp = filename.split('/')
-        if re.findall(r'.*APKBUILD.*', filename):
-            #print("Processing %s" % filename)
-            length = len(comp)
-            if length > 3:
-                repository = comp[length - 3]
-                name = comp[length - 2]
-                if name not in result:
-                    filename_commit = resolve_apkindex_file(
-                        filename, repository, repo_hash_dict)
-                    temp, parse_info = parse_apkbuild_manifest(
-                        name, repository, filename_commit, repo_hash_dict, apkindex)
-                    cnt = cnt + 1
-                    if len(parse_info) > 0:
-                        stats['parse'][name] = parse_info
-                    if len(temp) > 0:
-                        result[name] = temp
-                        if name in apkindex['index'] and 'struct' in apkindex['index'][name]: 
-                           result[name]['struct'] = apkindex['index'][name]['struct']
-                        if 'childs' in result[name]:
-                            for child in result[name]['childs']:
-                                child_entry = {}
-                                child_entry['parent'] = name
-                                result[child] = child_entry
-                        else:
-                            stats['parse']['errors'].append(
-                                "Missing child %s" % name)
+    cnt_package = 0
+    cnt_repo = 0
+    cnt_miss = 0
+
+    for name in apkindex['index']: 
+        repository = apkindex['index'][name]['repo'] 
+        commit  = apkindex['index'][name]['commit'] 
+        filename = checkout_dir + "/" + repository + "/" + name +  "/APKBUILD."  + commit
+        apkbuild_path = Path(filename)
+
+        # Try to open APKBUILD with individual commit 
+
+        if apkbuild_path.exists():
+           temp, parse_info = parse_apkbuild_manifest(name, repository, filename, repo_hash_dict, apkindex, "package")
+           cnt_package = cnt_package +1 
+        else: 
+           filename_commit = resolve_apkindex_file(filename, repository, repo_hash_dict)
+           apkbuild_path = Path(filename_commit)
+           if apkbuild_path.exists():
+
+              # Try to open APKBUILD with commit from repo tag  
+
+              temp, parse_info = parse_apkbuild_manifest(name, repository, filename_commit, repo_hash_dict, apkindex, "repo")
+              cnt_repo = cnt_repo + 1 
+           else: 
+
+              # Failed to resolve 
+              temp, parse_info = parse_apkbuild_manifest(name, repository, filename_commit, repo_hash_dict, apkindex, "broken-link-between-aports-and-apkbuild")
+              cnt_miss = cnt_miss + 1 
+        cnt = cnt + 1
+        if len(parse_info) > 0:
+           stats['parse'][name] = parse_info
+        if len(temp) > 0:
+           result[name] = temp
+           if name in apkindex['index'] and 'struct' in apkindex['index'][name]: 
+              result[name]['struct'] = apkindex['index'][name]['struct']
+           if 'childs' in result[name]:
+              for child in result[name]['childs']:
+                  child_entry = {}
+                  child_entry['parent'] = name
+                  result[child] = child_entry
+           else:
+             stats['parse']['errors'].append("Missing child %s" % name)
 
     stats['processed'] = cnt
+    stats['packages'] = cnt_package
+    stats['repos'] = cnt_repo
+    stats['miss'] = cnt_miss
     return result, stats
+   
 
 
 def main():

@@ -19,6 +19,16 @@ elif [ "$1" = 'index' ]; then
    # Combine information extracted from APKINDEX ( index.json ) and APORTS source , Output is a JSON with all info from APKINDEX and APORTS, named of hashed value of apkindex.tar
    exec sbom-resolver-parse_apkbuild --apkindex /sbom/index.json     --checkout /mnt/alpine/checkout   --cache      /mnt/alpine/cache 
 
+elif [ "$1" = 'deep' ]; then
+   # Input: tarball of all APKINDEX.tar.gz used in binary build , Output: One JSON file covering all packages used by the build 
+   sbom-resolver-aggregate_bom       --pkgindex /sbom/apkindex.tar   --output   /sbom/index.json 
+
+   # Checkout all APKINDEX files for each packages listed in index.json , Output: directory structure with all packages and APKINDEX with commit hash extension 
+   sbom-resolver-create_apkcache     --apkindex /sbom/index.json     --src      /mnt/alpine/src        --checkout   /mnt/alpine/checkout --cache /mnt/alpine/cache --deep
+
+   # Combine information extracted from APKINDEX ( index.json ) and APORTS source , Output is a JSON with all info from APKINDEX and APORTS, named of hashed value of apkindex.tar
+   exec sbom-resolver-parse_apkbuild --apkindex /sbom/index.json     --checkout /mnt/alpine/checkout   --cache      /mnt/alpine/cache 
+
 
 elif [ "$1" = 'tool' ]; then
    if [ "$#" -eq 1 ]; then
@@ -76,6 +86,7 @@ elif [ "$1" = 'help' ]; then
    echo "clone    :  Clone Alpine aports repository to local directory"
    echo "         :  Specify alternative path, default is https://git.alpinelinux.org/aports"
    echo "index    :  Create metadata needed for faster resolve "
+   echo "deep     :  Checkout aports package for each entry in apkindex "
    echo "server   :  Listen on port 8080 for HTTP requests , singlethread"
    echo "uwsgi    :  Listen on port 8080 for HTTP requests , multithread with uwsgi"
    echo "gunicorn :  Listen on port 8080 for HTTP requests , multithread with gunicorn"

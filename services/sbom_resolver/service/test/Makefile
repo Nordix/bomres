@@ -110,7 +110,7 @@ python_index:
 
 	# Checkout anc copy internal code, patches and APKBUILD from aports repository , directory structure in  /tmp/alpine/checkout 
         # Each repo tag is retrieved from index.json 
-	python3  ../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(PWD)/$(DIR)/build/base_os/sbom/index.json     --src      /tmp/alpine/src        --checkout   /tmp/alpine/checkout --cache /tmp/alpine/cache --debug
+	python3  ../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(PWD)/$(DIR)/build/base_os/sbom/index.json     --src      /tmp/alpine/src        --checkout   /tmp/alpine/checkout --cache /tmp/alpine/cache --debug --deep
 
         # Create /tmp/alpine/cache/APKINDEX-aa847b1b1602c1d767b7c58a148ff93c.json based on index.json and metadata from parsed aports data 
 	python3  ../build/bomres/bomres/lib/parse_apkbuild.py     --apkindex $(PWD)/$(DIR)/build/base_os/sbom/index.json     --checkout /tmp/alpine/checkout   --cache      /tmp/alpine/cache
