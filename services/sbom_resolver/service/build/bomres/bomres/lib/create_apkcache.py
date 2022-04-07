@@ -96,8 +96,21 @@ def prepare_aports_cache(aport_dir, dst_cache_dir, repo, commit_hash):
                 shutil.copyfile(filename, dst_file)
 
 
+
+def copy_aports_cache(aport_dir, dst_cache_dir, repo, package, commit_hash):
+    dst_file = "%s/%s/%s/APKBUILD.%s" % (dst_cache_dir, repo, package, commit_hash)
+    path = Path(dst_cache_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    src_file = "%s/%s/%s/APKBUILD" % (aport_dir, repo, package)
+    dirname = os.path.dirname(dst_file)
+    path = Path(dirname)
+    path.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(src_file, dst_file)
+
+
+
 def create_cache(aports_src, pull_branch,
-                 aports_checkout, aports_cache, apkindex, debug):
+                 aports_checkout, aports_cache, apkindex, deep, debug):
     age = 0 
     cache_index_file = "%s/APKINDEX-%s.json" % (
         aports_cache, apkindex['hash'])
@@ -114,13 +127,38 @@ def create_cache(aports_src, pull_branch,
         if orm['status'] == False:
             return False, cache_index_file, None, age 
 
+        # Sync the remote aport repo with local clone
         git_manager.pull("%s/aports" % aports_src)
         aports_info = git_manager.info("%s/aports" % aports_src)
+
+        # each APKBUILD checked out to the same commit state listed in APKINDEX
+        # This takes time 
+        
+        if deep: 
+          for commit_hash  in apkindex['commit_map']:
+            i = 0 
+            for comp in apkindex['commit_map'][commit_hash]: 
+              repo = apkindex['commit_map'][commit_hash][i]['repo']
+              package = apkindex['commit_map'][commit_hash][i]['package']
+              dst_file = "%s/%s/%s/APKBUILD.%s" % (aports_checkout, repo, package, commit_hash)
+              dst_file_path = Path(dst_file)
+              if debug: 
+                 sys.stderr.write("%s %s %s\n" % (commit_hash,repo,package))
+              if  dst_file_path.exists():
+                pass
+              else:
+                tmp = git_manager.checkout(commit_hash, "%s/aports" % aports_src)
+                copy_aports_cache("%s/aports" % aports_src , aports_checkout, repo, package, commit_hash)
+              i = i + 1 
+
+        # Assume that all components in a repo for a specic tag is aligned 
+        # This is fast 
+
         for repo in apkindex['repos']:
             commit_hash = apkindex['repos'][repo]['hash']
             commit_tag = apkindex['repos'][repo]['tag']
             if debug: 
-               sys.stdout.write("checkout tag %s\n" % commit_tag) 
+               sys.stdout.write("checkout repo: %s tag: tag %s\n" % (repo, commit_tag))
             tmp = git_manager.checkout(commit_tag, "%s/aports" % aports_src)
             prepare_aports_cache(
                 "%s/aports" %
@@ -143,13 +181,14 @@ def main():
     apk_index_dict = import_json(args.apkindex)
 
     entry_exists, cache_index_file, aports_info, age = create_cache(
-        args.src, pull_branch, args.checkout, args.cache, apk_index_dict, args.debug )
+        args.src, pull_branch, args.checkout, args.cache, apk_index_dict, args.deep, args.debug )
 
    # Dictionary for parsing command line args and options.
 args_options = {
     'opt':
     [
         {'long': '--debug', 'help': 'Debug mode'},
+        {'long': '--deep', 'help': 'Link on package , not repo'},
     ],
     'opt_w_arg':
     [

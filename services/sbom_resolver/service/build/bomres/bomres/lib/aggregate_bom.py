@@ -299,18 +299,22 @@ def commit_map(result):
     if 'index' in result:
         for package in result['index']:
             if 'parent' in result['index'][package] and package == result['index'][package]['parent']:
+                repo = result['index'][package]['repo']
                 commit = result['index'][package]['commit']
+                tmp = {}
+                tmp['package'] = package
+                tmp['repo'] = repo
                 if commit in packages_commit:
-                    packages_commit[commit].append(package)
+                    packages_commit[commit].append(tmp)
                 else:
                     packages_commit[commit] = []
-                    packages_commit[commit].append(package)
+                    packages_commit[commit].append(tmp)
 
     result['commit_map'] = packages_commit
     return result
 
 
-def process_tarball(tarball, debug, create_commit_map=False):
+def process_tarball(tarball, debug, create_commit_map=True):
     dirpath = tempfile.mkdtemp()
     CWD = os.getcwd()
     os.chdir(dirpath)

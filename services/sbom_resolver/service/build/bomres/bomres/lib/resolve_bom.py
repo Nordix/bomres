@@ -177,6 +177,9 @@ def mapper(comp_dict, alpine_dict, debug=False):
                         comp['aggregate']['match'] = 'product_version_match'
                         comp['aggregate']['parent'] = alpine_dict['map'][prod]['parent']
 
+                        if 'repolink' in alpine_dict['map'][prod]:
+                            comp['aggregate']['repolink'] = alpine_dict['map'][prod]['repolink']
+
                         if 'depend' in alpine_dict['map'][prod]:
                             comp['aggregate']['depend'] = alpine_dict['map'][prod]['depend']
 
@@ -217,11 +220,44 @@ def mapper(comp_dict, alpine_dict, debug=False):
                             sys.stdout.write("Version missing [%s] [%s]\n" % (
                                 ver, alpine_dict['map'][prod]['pkgver']))
 
+    primary_deps = []
+    for comp in comp_dict['dependencies']:
+     product = comp['pipeline']['product']
+     parent = comp['pipeline']['aggregator']['alpine']['parent']
+     if parent not in primary_deps and product == parent:
+        primary_deps.append(parent)
+
+
+    second_main = {}
+    for comp in comp_dict['dependencies']:
+     product = comp['pipeline']['product']
+     if product  in primary_deps:
+       parent = comp['pipeline']['aggregator']['alpine']['parent']
+       if parent in primary_deps:
+        develop = comp['pipeline']['aggregator']['alpine']['depends']['develop']
+        for lib in develop:
+          dev_parent = develop[lib]['parent']
+          if dev_parent not in primary_deps:
+            if dev_parent not in second_main:
+             second_main[dev_parent] = {}
+             second_main[dev_parent][product] = []
+             second_main[dev_parent][product].append(lib)
+            else:
+             if product not in second_main[dev_parent]:
+               second_main[dev_parent][product] = []
+             second_main[dev_parent][product].append(lib)
+
     comp_dict['tools'] = tool_dict
     comp_dict['stats'] = {}
     comp_dict['stats']['aggregate'] = stats
-    return comp_dict
+    comp_dict['stats']['resolver'] = {} 
 
+    if len(second_main) > 0: 
+       comp_dict['stats']['resolver']['status'] = False
+       comp_dict['stats']['resolver']['secondary'] = second_main
+    else: 
+       comp_dict['stats']['resolver']['status'] = True
+    return comp_dict
 
 def main():
 
