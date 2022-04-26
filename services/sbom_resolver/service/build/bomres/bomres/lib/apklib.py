@@ -473,8 +473,6 @@ install="
             tmp = s.lstrip()
             tmp = tmp.strip('"')
             for fi in tmp.split():  
-              if re.findall(r'.*=.*', fi): 
-                print("FISK1")
               temp = fi.rstrip('<')
               temp = temp.rstrip('>')
               if len(temp) > 0:
@@ -855,6 +853,9 @@ install="
             e_resolved = e_path.replace('$pkgname', result['pkgname'])
             e_resolved = e_resolved.replace('${pkgname}', result['pkgname'])
             if '_pkgname' in exp_var_map: 
+               if 'pkgname_alias' not in result: 
+                  result['pkgname_alias'] = exp_var_map['_pkgname']
+               result['download']['internal']['build'] = []
                e_resolved = e_resolved.replace('$_pkgname', exp_var_map['_pkgname'])
             e_resolved = e_resolved.replace('${_pkgname}', result['pkgname'])
             e_resolved = e_resolved.replace('$pkgver', result['pkgver'])
@@ -1038,6 +1039,10 @@ def resolve_apkindex_file(filename, repo, repo_hash_dict):
 
 
 def main():
+
+    # Test 
+    # Build base_image so that /tmp/alpine is populated and /tmp/index.json is generated 
+    # python3 apklib.py --checkout  /tmp/alpine/checkout/ --src /tmp/alpine/src/  --name  prometheus-node-exporter --apkindex /tmp/index.json  --output /tmp/a
 
     args = parse_cmdline()
     apkindex = import_json(args.apkindex)
