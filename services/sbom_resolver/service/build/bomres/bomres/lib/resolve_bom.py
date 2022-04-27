@@ -180,6 +180,9 @@ def mapper(comp_dict, alpine_dict, debug=False):
                         if 'repolink' in alpine_dict['map'][prod]:
                             comp['aggregate']['repolink'] = alpine_dict['map'][prod]['repolink']
 
+                        if 'pkgname_alias' in alpine_dict['map'][prod]:
+                            comp['aggregate']['pkgname_alias'] = alpine_dict['map'][prod]['pkgname_alias']
+
                         if 'depend' in alpine_dict['map'][prod]:
                             comp['aggregate']['depend'] = alpine_dict['map'][prod]['depend']
 
