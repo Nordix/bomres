@@ -16,6 +16,7 @@ help:
 	@echo ""
 
 _config:
+	@mkdir -p $(DIR)/build
 	@docker run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config
 
 
