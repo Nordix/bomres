@@ -1,7 +1,7 @@
 
 # Setting for Alpine
 
-ALPINE_VERSION=3.15
+ALPINE_VERSION=3.16
 ARCH=x86_64
 REPO_URL=http://dl-cdn.alpinelinux.org/alpine
 
@@ -9,15 +9,15 @@ BUILDER_IMAGE=alpine_builder
 
 
 BASE_OS_IMAGE=sbom_resolver_base_os
-BASE_OS_VERSION=3.15.1
+BASE_OS_VERSION=3.16.1
 
 
 # Labels in Container
 IMAGE_TITLE="Alpine Base OS for SBOM Resolver"
-IMAGE_CREATED="2021-12-28"
+IMAGE_CREATED="2022-12-23"
 IMAGE_REVISION="A"
-IMAGE_VENDOR="Ericsson"
+IMAGE_VENDOR="Lamm Consulting"
 IMAGE_VERSION=1
-IMAGE_AUTHOR=hans.thorsen@ericsson.com
+IMAGE_AUTHOR=hans@lammda.se
 
 

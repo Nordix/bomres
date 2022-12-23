@@ -8,16 +8,15 @@ REPO_URL=http://dl-cdn.alpinelinux.org/alpine
 BUILDER_IMAGE=alpine_builder
 
 
-BASE_OS_IMAGE=robot_base_os
+BASE_OS_IMAGE=alpine_sandbox_base_os
 BASE_OS_VERSION=3.16.1
 
 
 # Labels in Container
-IMAGE_TITLE="Alpine Base OS for Robot tests"
+IMAGE_TITLE="Alpine Base OS Image"
 IMAGE_CREATED="2022-12-23"
 IMAGE_REVISION="A"
-IMAGE_VENDOR="Lamm Consulting AB "
+IMAGE_VENDOR="Lammda"
 IMAGE_VERSION=1
 IMAGE_AUTHOR=hans@lammda.se
-
 
