@@ -49,12 +49,13 @@ build() {
 	} >&2
 
 	[[ "$ADD_APK_SCRIPT" ]] && cp /apk-install "$rootfs/usr/sbin/apk-install"
+	tar -z -f /rootfs/rootfs.tar.gz --numeric-owner -C "$rootfs" -c .
 
 	# save
+	return 0
 	tar -z -f rootfs.tar.gz --numeric-owner -C "$rootfs" -c .
 	[[ "$STDOUT" ]] && cat rootfs.tar.gz
 
-	return 0
 }
 
 main() {
