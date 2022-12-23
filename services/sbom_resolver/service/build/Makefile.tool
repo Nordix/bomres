@@ -2,7 +2,7 @@
 
 BASE_OS_IMAGE   = docker.io/bomres/base_os_alpine
 RESOLVER_IMAGE  = docker.io/bomres/alpine_resolver
-TOOLS_IMAGE  = alpine_sandbox_base_os_tool:3.15.1
+TOOLS_IMAGE  = alpine_sandbox_base_os_tool:3.16.1
 
 DIR=product
 TEMPDIR=/tmp/alpine

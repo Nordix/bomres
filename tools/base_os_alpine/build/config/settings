@@ -1,7 +1,7 @@
 
 # Setting for Alpine
 
-ALPINE_VERSION=3.15
+ALPINE_VERSION=3.16
 ARCH=x86_64
 REPO_URL=http://dl-cdn.alpinelinux.org/alpine
 
@@ -9,14 +9,14 @@ BUILDER_IMAGE=alpine_builder
 
 
 BASE_OS_IMAGE=base_os_alpine
-BASE_OS_VERSION=3.15.20
+BASE_OS_VERSION=3.16.1
 
 
 # Labels in Container 
-IMAGE_TITLE="Tool for building Alpine Base OS Container images "
-IMAGE_CREATED="2022-04-04"
+IMAGE_TITLE="Tool for building Alpine Base OS Container images  with Podman"
+IMAGE_CREATED="2022-12-23"
 IMAGE_REVISION="A"
-IMAGE_VENDOR="Ericsson"
-IMAGE_VERSION=20
-IMAGE_AUTHOR=hans.thorsen@ericsson.com
+IMAGE_VENDOR="Lamm Consulting AB"
+IMAGE_VERSION=1
+IMAGE_AUTHOR=hans@lammda.se
 

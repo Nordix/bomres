@@ -27,7 +27,7 @@ if [ "$1" = 'init' ]; then
        mkdir -p /sandbox/base_os/config
     fi 
     if test ! -f /sandbox/base_os/config/settings ; then 
-       cp -f /opt/base_os/templates/config3.15  /sandbox/base_os/config/settings
+       cp -f /opt/base_os/templates/config/3.16  /sandbox/base_os/config/settings
     fi 
     if test ! -f /sandbox/base_os/config/packages ; then 
        cp -f /opt/base_os/templates/images/minimal  /sandbox/base_os/config/packages
@@ -44,7 +44,7 @@ elif [ "$1" = 'config' ]; then
        mkdir -p /sandbox/base_os/config
     fi 
     if test ! -f /sandbox/base_os/config/settings ; then 
-       cp -f /opt/base_os/templates/config/v3.15  /sandbox/base_os/config/settings
+       cp -f /opt/base_os/templates/config/v3.16  /sandbox/base_os/config/settings
     fi 
     if test ! -f /sandbox/base_os/config/packages ; then 
        cp -f /opt/base_os/templates/images/minimal  /sandbox/base_os/config/packages
