@@ -38,13 +38,11 @@ More detailed documentation on how to deploy each scenario to come soon.
 
 ### Prerequisities
 
-It is recommended to install rootless docker, otherwise the examples in this section must be run as root.
+Ubuntu 22.04.1 LTS
 
-Install rootless docker as follows:
+podman version 3.4.4
 
-```bash
-$ sudo curl -fsSL https://get.docker.com/rootless | sh
-```
+
 
 ### Containerized tool
 
@@ -57,19 +55,8 @@ $ vim alpine/build/base_os/config/packages
 $ vim alpine/build/base_os/config/settings
 $ make build
 $ make resolve
+$ make download_source # Download all source code including patches
 ```
-
-### Standalone local service
-
-```bash
-$ docker run -it --rm docker.io/bomres/alpine_resolver make > Makefile
-$ make service &
-$ make build
-```
-
-### Scalable service deployed on Kubernetes
-
-To be added soon.
 
 
 
@@ -77,27 +64,10 @@ To be added soon.
 
 bomres is current in early stages and primarily meant to demonstate the concept. All contributions, PRs, issues, comments, are welcome.
 
-### Building from source
 
-To build the alpine image builder and the sbom-resolver container, run the command below:
 
 ```bash
-$ make all
-```
 
-### Testing a source build
-
-To test a local build of bomres, run the following:
-
-```bash
-$ docker run -it --rm base_os_alpine:<TAG> make > Makefile
-$ sed -i 's/docker.io\/bomres\///g' Makefile
-$ <potentially modify image tags>
-$ make config
-$ vim alpine/build/base_os/config/packages
-$ vim alpine/build/base_os/config/settings
-$ make build
-$ make resolve
 ```
 
 

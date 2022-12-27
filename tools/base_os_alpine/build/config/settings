@@ -9,14 +9,14 @@ BUILDER_IMAGE=alpine_builder
 
 
 BASE_OS_IMAGE=base_os_alpine
-BASE_OS_VERSION=3.16.1
+BASE_OS_VERSION=3.16.3
 
 
 # Labels in Container 
 IMAGE_TITLE="Tool for building Alpine Base OS Container images  with Podman"
-IMAGE_CREATED="2022-12-23"
+IMAGE_CREATED="2022-12-27"
 IMAGE_REVISION="A"
 IMAGE_VENDOR="Lamm Consulting AB"
-IMAGE_VERSION=1
+IMAGE_VERSION=3
 IMAGE_AUTHOR=hans@lammda.se
 

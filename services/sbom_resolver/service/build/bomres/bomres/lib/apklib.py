@@ -698,9 +698,15 @@ install="
             try:
                 secfixes = yaml.safe_load(secfixes_yaml)
             except BaseException:
-                print(name)
-                print(secfixes_yaml)
-                sys.exit(1)
+                secfixes_yaml = ""
+                secfixes_error = {} 
+                secfixes_error['secfixes'] = {} 
+                secfixes_error['secfixes']['broken'] = []
+                secfixes_error['secfixes']['broken'].append("syntax, check APKBUILD") 
+                result['security'] = secfixes_error
+                #print(name)
+                #print(secfixes_yaml)
+                #sys.exit(1)
             else:
                 secfixes_yaml = ""
                 result['security'] = secfixes
@@ -792,7 +798,7 @@ install="
           tmp_tool_dep[p] = {} 
           tmp_tool_dep[p]['parent'] = apkbuild['index'][p]['parent']
         except: 
-          sys.stderr.write("Problem parsing tools/makedepends\n")  
+          sys.stderr.write("Problem parsing tools/makedepends %s \n" % p )  
       result['tools']['makedepends'] = tmp_tool_dep
     
     check_dep = [] 
@@ -825,7 +831,7 @@ install="
           tmp_check_dep[p] = {} 
           tmp_check_dep[p]['parent'] = apkbuild['index'][p]['parent']
         except: 
-          sys.stderr.write("Problem parsing tools/checkdepends\n")  
+          sys.stderr.write("Problem parsing tools/checkdepends %s \n" % p )  
       result['tools']['checkdepends'] = tmp_check_dep
     
     # source section consists of the following entries
