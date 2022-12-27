@@ -45,6 +45,7 @@ $(PAYLOAD_CONTAINER_FILE) :
 builder:  clean $(BUILD_CONTAINER_FILE)
 	cd $(BUILDER_DIR) && docker build -t ${BUILDER_IMAGE} -f Containerfile .
 	mkdir -p tools
+	rm -f tools/${BUILDER_IMAGE}.tar
 	docker save ${BUILDER_IMAGE} -o tools/${BUILDER_IMAGE}.tar 
 
 

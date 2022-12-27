@@ -72,6 +72,7 @@ index:
 
 
 clone: 
+	mkdir -p $(TEMPDIR)/src $(TEMPDIR)/index $(TEMPDIR)/checkout $(TEMPDIR)/cache
 	docker run -i -t -v  $(TEMPDIR)/src:/mnt/alpine/src    $(RESOLVER_IMAGE) clone 
 
 _index:
@@ -93,6 +94,7 @@ resolve: clone index res
 
 
 download_source:
+	mkdir -p $$PWD/$(DIR)/build/base_os/source 
 	make _download_source DIR=product
 
 .PHONY: tool
