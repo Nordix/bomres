@@ -17,11 +17,11 @@ help:
 
 _config:
 	@mkdir -p $(DIR)/build
-	@docker run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config
+	@podman run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config
 
 
 _init:
-	@docker run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  init
+	@podman run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  init
 
 
 _prepare:
@@ -45,7 +45,7 @@ _sh:
 	@make -C $$PWD/$(DIR)/test  sh DIR=$(DIR)
 
 _aggregate: 
-	@docker run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox"  $(BASE_OS_IMAGE)  aggregate
+	@podman run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox"  $(BASE_OS_IMAGE)  aggregate
 
 aggregate: 
 	make _aggregate DIR=product
@@ -73,20 +73,20 @@ index:
 
 clone: 
 	mkdir -p $(TEMPDIR)/src $(TEMPDIR)/index $(TEMPDIR)/checkout $(TEMPDIR)/cache
-	docker run -i -t -v  $(TEMPDIR)/src:/mnt/alpine/src    $(RESOLVER_IMAGE) clone 
+	podman run -i -t -v  $(TEMPDIR)/src:/mnt/alpine/src    $(RESOLVER_IMAGE) clone 
 
 _index:
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v  "$(TEMPDIR)/src:/mnt/alpine/src" -v  "$(TEMPDIR)/checkout:/mnt/alpine/checkout"  -v  "$(TEMPDIR)/cache:/mnt/alpine/cache" $(RESOLVER_IMAGE) index
+	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v  "$(TEMPDIR)/src:/mnt/alpine/src" -v  "$(TEMPDIR)/checkout:/mnt/alpine/checkout"  -v  "$(TEMPDIR)/cache:/mnt/alpine/cache" $(RESOLVER_IMAGE) index
 
 _res: 
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom"  -v "$(TEMPDIR)/cache:/mnt/alpine/cache"  $(RESOLVER_IMAGE) resolve
+	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom"  -v "$(TEMPDIR)/cache:/mnt/alpine/cache"  $(RESOLVER_IMAGE) resolve
 
 _download_source:
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal patch
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal code
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal build
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external patch
-	docker run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
+	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal patch
+	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal code
+	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal build
+	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external patch
+	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
 
 
 build: init config prepare public_build download private_build test aggregate
@@ -100,8 +100,8 @@ download_source:
 .PHONY: tool
 tool_config:
 	@mkdir -p tool/build/base_os/config/
-	@docker run   --rm -it  -v "$$PWD/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool packages > tool/build/base_os/config/packages
-	@docker run   --rm -it  -v "$$PWD/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool settings > tool/build/base_os/config/settings
+	@podman run   --rm -it  -v "$$PWD/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool packages > tool/build/base_os/config/packages
+	@podman run   --rm -it  -v "$$PWD/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool settings > tool/build/base_os/config/settings
 	@dos2unix tool/build/base_os/config/packages 
 	@dos2unix tool/build/base_os/config/settings
 
@@ -141,11 +141,11 @@ PACKAGE=musl
 REPO=main
 
 abuild: 
-	#docker run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root build PACKAGE=$(PACKAGE) ARCH=$(ARCH) REPO=$(REPO) 
-	docker run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) sh /root/build.sh $(PACKAGE) $(ARCH) $(REPO) 
+	#podman run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root build PACKAGE=$(PACKAGE) ARCH=$(ARCH) REPO=$(REPO) 
+	podman run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) sh /root/build.sh $(PACKAGE) $(ARCH) $(REPO) 
 
 shell:
-	docker run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) sh 
+	podman run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) sh 
 
 
 REPOS =  $(shell ls product/build/base_os/source/repo )
@@ -161,7 +161,7 @@ check:
 	do                                      \
 	for i in `ls product/build/base_os/source/repo/$${repo}`;             \
 	do                                  \
-		if docker run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root check ARCH=${ARCH} PACKAGE=$${i} REPO=$${repo} ; then \
+		if podman run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root check ARCH=${ARCH} PACKAGE=$${i} REPO=$${repo} ; then \
 		   $(ECHO) -e "passed\t$${repo}\t$${i}" >> $(VERIFY_LOG);  \
                 else \
 		   $(ECHO) -e "failed\t$${repo}\t$${i}" >> $(VERIFY_LOG);  \
@@ -181,7 +181,7 @@ pkg:
 		tm=`date +"%s"`; \
 		$(ECHO) -e "$$tm\start\t$${repo}\t$${i}" >> $(BUILD_LOG);  \
 		if true ; then \
-		   docker run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $${i} ${ARCH} $${repo}  ; \
+		   podman run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $${i} ${ARCH} $${repo}  ; \
 		   tm=`date +"%s"`; \
 		   $(ECHO) -e "$$tm\tstop\tOK" >> $(BUILD_LOG);  \
                 else \
@@ -200,8 +200,8 @@ keygen:
 sign:
 	@for repo in ${REPOS};                   \
 	do                                      \
-	   docker run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root   $(TOOLS_IMAGE)  make -C /root index ARCH=${ARCH}  REPO=$${repo} ; \
-	   docker run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root  $(TOOLS_IMAGE)   make -C /root sign  ARCH=${ARCH}  REPO=$${repo} ; \
+	   podman run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root   $(TOOLS_IMAGE)  make -C /root index ARCH=${ARCH}  REPO=$${repo} ; \
+	   podman run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root  $(TOOLS_IMAGE)   make -C /root sign  ARCH=${ARCH}  REPO=$${repo} ; \
 	done
 
 TEST_MAKEFILE = $(DIR)/test/Makefile
@@ -219,9 +219,9 @@ $(TEST_MAKEFILE) :
 	echo "CONTAINER_IMAGE = \$$(BASE_OS_IMAGE):\$$(BASE_OS_VERSION)" >> $@
 	echo "" >> $@
 	echo "test:" >> $@
-	echo "\tdocker run   --rm  -i --entrypoint='/usr/local/bin/bom.sh'  --name alpine\$$(ALPINE_VERSION) \$$(CONTAINER_IMAGE) | tee os.bom" >> $@
+	echo "\tpodman run   --rm  -i --entrypoint='/usr/local/bin/bom.sh'  --name alpine\$$(ALPINE_VERSION) \$$(CONTAINER_IMAGE) | tee os.bom" >> $@
 	echo "sh:" >> $@
-	echo "\tdocker run   --rm  -it  --name alpine\$$(ALPINE_VERSION) \$$(CONTAINER_IMAGE) sh" >> $@
+	echo "\tpodman run   --rm  -it  --name alpine\$$(ALPINE_VERSION) \$$(CONTAINER_IMAGE) sh" >> $@
 
 
 BUILDER_SCRIPT = tool/builder/build.sh
