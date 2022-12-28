@@ -31,7 +31,7 @@ $(BUILD_CONTAINER_FILE) :
 
 # Create the Alpine build image
 builder:   $(BUILD_CONTAINER_FILE)
-	cd $(BUILDER_DIR) && docker build -t ${BUILDER_IMAGE} -f Containerfile .
+	cd $(BUILDER_DIR) && podman build -t ${BUILDER_IMAGE} -f Containerfile .
 
 
 PAYLOAD_CONTAINER_FILE = $(BUILD_DIR)/Containerfile
@@ -67,14 +67,14 @@ $(PAYLOAD_CONTAINER_FILE) :
 
 
 public_build:  $(PAYLOAD_CONTAINER_FILE)
-	docker run --rm -v$(CWD)/$(BUILD_DIR):/rootfs $(BUILDER_IMAGE) -a $(ARCH)  -b -s -t UTC -r v$(ALPINE_VERSION) -m $(REPO_URL)  -p $(PACKAGE_LIST)  
-	cd $(BUILD_DIR) && docker build -t $(CONTAINER_IMAGE) -f Containerfile .
-	docker run --rm -i  $(CONTAINER_IMAGE)  /bin/sh -c 'apk info -v 2> /dev/null' > sbom/os.apk
+	podman run --rm -v$(CWD)/$(BUILD_DIR):/rootfs $(BUILDER_IMAGE) -a $(ARCH)  -b -s -t UTC -r v$(ALPINE_VERSION) -m $(REPO_URL)  -p $(PACKAGE_LIST)  
+	cd $(BUILD_DIR) && podman build -t $(CONTAINER_IMAGE) -f Containerfile .
+	podman run --rm -i  $(CONTAINER_IMAGE)  /bin/sh -c 'apk info -v 2> /dev/null' > sbom/os.apk
 
 private_build:  $(PAYLOAD_CONTAINER_FILE)
-	docker run -v$(CWD)/$(BUILD_DIR):/rootfs -v "$$PWD/download/alpine/:/download"  --rm $(BUILDER_IMAGE)  -a  $(ARCH)  -b -s -t UTC -r v$(ALPINE_VERSION) -m /download -p $(PACKAGE_LIST)  
-	cd $(BUILD_DIR) && docker build -t $(CONTAINER_IMAGE)  -f Containerfile  .
-	docker run --rm -i   $(CONTAINER_IMAGE)  /bin/sh -c '/usr/local/bin/bom.sh 2> /dev/null' > sbom/os.bom
+	podman run -v$(CWD)/$(BUILD_DIR):/rootfs -v "$$PWD/download/alpine/:/download"  --rm $(BUILDER_IMAGE)  -a  $(ARCH)  -b -s -t UTC -r v$(ALPINE_VERSION) -m /download -p $(PACKAGE_LIST)  
+	cd $(BUILD_DIR) && podman build -t $(CONTAINER_IMAGE)  -f Containerfile  .
+	podman run --rm -i   $(CONTAINER_IMAGE)  /bin/sh -c '/usr/local/bin/bom.sh 2> /dev/null' > sbom/os.bom
 	cat config/packages > sbom/os.conf
 
 
@@ -86,27 +86,27 @@ download:
 
 
 # build:
-#	docker build -t  $(CONTAINER_IMAGE) .
+#	podman build -t  $(CONTAINER_IMAGE) .
 
 
-# Invoke docker image with a shell for inspection 
+# Invoke podman image with a shell for inspection 
 
 docker_test:
-	docker run -i -t    --entrypoint=/bin/sh $(CONTAINER_IMAGE) 
+	podman run -i -t    --entrypoint=/bin/sh $(CONTAINER_IMAGE) 
 
 cpe:
-	@docker run   --rm  -i --entrypoint='/usr/local/bin/bom.sh'  --name alpine$(ALPINE_VERSION) $(CONTAINER_IMAGE) | tee os.bom
+	@podman run   --rm  -i --entrypoint='/usr/local/bin/bom.sh'  --name alpine$(ALPINE_VERSION) $(CONTAINER_IMAGE) | tee os.bom
 
 
 
 tag:
-	docker tag $(CONTAINER_IMAGE) $(REGISTRY)/$(REPOSITORY)/$(CONTAINER_IMAGE)
+	podman tag $(CONTAINER_IMAGE) $(REGISTRY)/$(REPOSITORY)/$(CONTAINER_IMAGE)
 
 login:
-	docker login $(REGISTRY)
+	podman login $(REGISTRY)
 
 push:
-	docker push $(REGISTRY)/$(REPOSITORY)/$(CONTAINER_IMAGE)
+	podman push $(REGISTRY)/$(REPOSITORY)/$(CONTAINER_IMAGE)
 
 release: build  tag login push 
 

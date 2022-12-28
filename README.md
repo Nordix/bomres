@@ -49,14 +49,33 @@ podman version 3.4.4
 To run bomres as a containerized toolset, perform the following steps:
 
 ```bash
-$ docker run -it --rm docker.io/bomres/base_os_alpine make > Makefile
+$ podman run -it --rm docker.io/bomres/base_os_alpine make > Makefile
 $ make config
-$ vim alpine/build/base_os/config/packages
-$ vim alpine/build/base_os/config/settings
+$ vim product/build/base_os/config/packages
+$ vim product/build/base_os/config/settings
 $ make build
 $ make resolve
-$ make download_source # Download all source code including patches
+$ make download_source # Download all source code, including patches
 ```
+
+### Service
+
+To run bomres as a service 
+
+```bash
+$ podman run -i -t -p 8082:8080 docker.io/bomres/alpine_resolver server
+$ firefox http://localhost:8082/resolver/alpine/v1/ui/ 
+```
+
+### CI/CD Integration 
+
+The two docker images could be invoked inside another container
+
+```bash
+$ cd tools/base_os_alpine/test/podman  
+$ make run 
+```
+
 
 
 

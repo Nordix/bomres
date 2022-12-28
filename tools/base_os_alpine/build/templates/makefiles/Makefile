@@ -43,46 +43,46 @@ $(PAYLOAD_CONTAINER_FILE) :
 
 # Create the Alpine build image 
 builder:  clean $(BUILD_CONTAINER_FILE)
-	cd $(BUILDER_DIR) && docker build -t ${BUILDER_IMAGE} -f Containerfile .
+	cd $(BUILDER_DIR) && podman build -t ${BUILDER_IMAGE} -f Containerfile .
 	mkdir -p tools
 	rm -f tools/${BUILDER_IMAGE}.tar
-	docker save ${BUILDER_IMAGE} -o tools/${BUILDER_IMAGE}.tar 
+	podman save ${BUILDER_IMAGE} -o tools/${BUILDER_IMAGE}.tar 
 
 
 load_builder:
-	docker load <  tools/${BUILDER_IMAGE}.tar 
+	podman load <  tools/${BUILDER_IMAGE}.tar 
 	
 
 clean:
-	-docker rmi --force ${BUILDER_IMAGE}
+	-podman rmi --force ${BUILDER_IMAGE}
 
 # Test the newly created build image by invoke a shell in the container 
 test_builder:
-	docker run -i -t -v "$$PWD/packages/alpine:/packages"  --entrypoint=/bin/bash ${BUILDER_IMAGE} 
+	podman run -i -t -v "$$PWD/packages/alpine:/packages"  --entrypoint=/bin/bash ${BUILDER_IMAGE} 
 
 
 
 
 public_build:  $(PAYLOAD_CONTAINER_FILE)
-	docker run -v$(CWD)/$(BUILD_DIR):/rootfs --rm $(BUILDER_IMAGE) -a $(ARCH)  -b -s -t UTC -r v$(ALPINE_VERSION) -m $(REPO_URL)  -p $(PACKAGE_LIST)   > $(BUILD_DIR)/rootfs.tar.gz
-	cd $(BUILD_DIR) && docker build -t $(CONTAINER_IMAGE) -f Containerfile .
-	docker run --rm -i  $(CONTAINER_IMAGE)  /bin/sh -c 'apk info -v 2> /dev/null' > sbom/os.apk
+	podman run -v$(CWD)/$(BUILD_DIR):/rootfs --rm $(BUILDER_IMAGE) -a $(ARCH)  -b -s -t UTC -r v$(ALPINE_VERSION) -m $(REPO_URL)  -p $(PACKAGE_LIST)   > $(BUILD_DIR)/rootfs.tar.gz
+	cd $(BUILD_DIR) && podman build -t $(CONTAINER_IMAGE) -f Containerfile .
+	podman run --rm -i  $(CONTAINER_IMAGE)  /bin/sh -c 'apk info -v 2> /dev/null' > sbom/os.apk
 
 private_build:  $(PAYLOAD_CONTAINER_FILE)
-	docker run -v$(CWD)/$(BUILD_DIR):/rootfs  -v "$$PWD/download/alpine/:/download"  --rm $(BUILDER_IMAGE)  -a  $(ARCH)   -b -s -t UTC -r v$(ALPINE_VERSION) -m /download -p $(PACKAGE_LIST)   > $(BUILD_DIR)/rootfs.tar.gz
-	cd $(BUILD_DIR) && docker build -t $(CONTAINER_IMAGE) -f Containerfile .
-	docker run --rm -i  $(CONTAINER_IMAGE) /bin/sh -c '/usr/local/bin/bom.sh 2> /dev/null' > sbom/os.bom
+	podman run -v$(CWD)/$(BUILD_DIR):/rootfs  -v "$$PWD/download/alpine/:/download"  --rm $(BUILDER_IMAGE)  -a  $(ARCH)   -b -s -t UTC -r v$(ALPINE_VERSION) -m /download -p $(PACKAGE_LIST)   > $(BUILD_DIR)/rootfs.tar.gz
+	cd $(BUILD_DIR) && podman build -t $(CONTAINER_IMAGE) -f Containerfile .
+	podman run --rm -i  $(CONTAINER_IMAGE) /bin/sh -c '/usr/local/bin/bom.sh 2> /dev/null' > sbom/os.bom
 	cat config/packages  > sbom/os.conf	
 
 
 tag:
-	docker tag $(CONTAINER_IMAGE) $(REGISTRY)/$(REPOSITORY)/$(CONTAINER_IMAGE)
+	podman tag $(CONTAINER_IMAGE) $(REGISTRY)/$(REPOSITORY)/$(CONTAINER_IMAGE)
 
 login:
-	docker login $(REGISTRY)
+	podman login $(REGISTRY)
 
 push:
-	docker push $(REGISTRY)/$(REPOSITORY)/$(CONTAINER_IMAGE)
+	podman push $(REGISTRY)/$(REPOSITORY)/$(CONTAINER_IMAGE)
 
 
 download:
@@ -92,7 +92,7 @@ prepare: login builder public_build
 build:   private_build tag  push
 
 test_payload:
-	docker run -i -t --entrypoint=/bin/sh   $(REGISTRY)/$(REPOSITORY)/$(PAYLOAD_IMAGE):$(BASE_VERSION)
+	podman run -i -t --entrypoint=/bin/sh   $(REGISTRY)/$(REPOSITORY)/$(PAYLOAD_IMAGE):$(BASE_VERSION)
 
 # mount -t proc proc /proc
 chroot_payload:
