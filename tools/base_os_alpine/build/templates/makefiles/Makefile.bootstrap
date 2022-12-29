@@ -1,11 +1,18 @@
-
+#
+#  tools/base_os_alpine/build/templates/makefiles/Makefile.bootstrap
+#
+#  This file is written to stdout out by the command below
+#  podman run docker.io/bomres/base_os_alpine make
+#
 
 BASE_OS_IMAGE   = docker.io/bomres/base_os_alpine
 RESOLVER_IMAGE  = docker.io/bomres/alpine_resolver
 TOOLS_IMAGE     = alpine_sandbox_base_os_tool:3.16.1
 
-DIR=product
 TEMPDIR=/tmp/alpine
+
+CWD := $(shell cd -P -- '$(shell dirname -- "$0")' && pwd -P)
+DIR ?= $(CWD)
 
 
 help:
@@ -17,58 +24,58 @@ help:
 
 _config:
 	@mkdir -p $(DIR)/build
-	@podman run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config
+	@podman run   --rm -it $(OPTIONS)  -v "$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config
 
 
 _init:
-	@podman run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  init
+	@podman run   --rm -it $(OPTIONS)  -v "$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  init
 
 
 _prepare:
-	@make -C $$PWD/$(DIR)/build/base_os  builder
+	@make -C $(DIR)/build/base_os  builder
 
 _public_build:
-	@make -C $$PWD/$(DIR)/build/base_os  public_build
+	@make -C $(DIR)/build/base_os  public_build
 
 _download:
-	@make -C  $$PWD/$(DIR)/build/base_os  download
+	@make -C  $(DIR)/build/base_os  download
 
 _private_build:
-	@make -C $$PWD/$(DIR)/build/base_os  private_build
+	@make -C $(DIR)/build/base_os  private_build
 
 _test: 
 	@make $(TEST_MAKEFILE)  DIR=$(DIR)
-	@make -C $$PWD/$(DIR)/test  test DIR=$(DIR)
+	@make -C $(DIR)/test  test DIR=$(DIR)
 
 _sh: 
 	@make $(TEST_MAKEFILE)  DIR=$(DIR)
-	@make -C $$PWD/$(DIR)/test  sh DIR=$(DIR)
+	@make -C $(DIR)/test  sh DIR=$(DIR)
 
 _aggregate: 
-	@podman run   --rm -it $(OPTIONS)  -v "$$PWD/$(DIR)/build:/sandbox"  $(BASE_OS_IMAGE)  aggregate
+	@podman run   --rm -it $(OPTIONS)  -v "$(DIR)/build:/sandbox"  $(BASE_OS_IMAGE)  aggregate
 
 aggregate: 
-	make _aggregate DIR=product
+	make _aggregate DIR=$(DIR)/product
 config: 
-	make _config DIR=product
+	make _config DIR=$(DIR)/product
 init: 
-	make _init DIR=product
+	make _init DIR=$(DIR)/product
 public_build: 
-	make _public_build DIR=product
+	make _public_build DIR=$(DIR)/product
 prepare: 
-	make _prepare DIR=product
+	make _prepare DIR=$(DIR)/product
 download: 
-	make _download DIR=product
+	make _download DIR=$(DIR)/product
 private_build: 
-	make _private_build DIR=product
+	make _private_build DIR=$(DIR)/product
 test: 
-	make _test DIR=product
+	make _test DIR=$(DIR)/product
 sh: 
-	make _sh DIR=product
+	make _sh DIR=$(DIR)/product
 res: 
-	make _res DIR=product
+	make _res DIR=$(DIR)/product
 index: 
-	make _index DIR=product
+	make _index DIR=$(DIR)/product
 
 
 clone: 
@@ -76,17 +83,17 @@ clone:
 	podman run -i -t -v  $(TEMPDIR)/src:/mnt/alpine/src    $(RESOLVER_IMAGE) clone 
 
 _index:
-	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v  "$(TEMPDIR)/src:/mnt/alpine/src" -v  "$(TEMPDIR)/checkout:/mnt/alpine/checkout"  -v  "$(TEMPDIR)/cache:/mnt/alpine/cache" $(RESOLVER_IMAGE) index
+	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v  "$(TEMPDIR)/src:/mnt/alpine/src" -v  "$(TEMPDIR)/checkout:/mnt/alpine/checkout"  -v  "$(TEMPDIR)/cache:/mnt/alpine/cache" $(RESOLVER_IMAGE) index
 
 _res: 
-	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom"  -v "$(TEMPDIR)/cache:/mnt/alpine/cache"  $(RESOLVER_IMAGE) resolve
+	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom"  -v "$(TEMPDIR)/cache:/mnt/alpine/cache"  $(RESOLVER_IMAGE) resolve
 
 _download_source:
-	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal patch
-	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal code
-	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal build
-	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external patch
-	podman run -i -t -v "$$PWD/$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$$PWD/$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
+	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal patch
+	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal code
+	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal build
+	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external patch
+	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
 
 
 build: init config prepare public_build download private_build test aggregate
@@ -94,44 +101,45 @@ resolve: clone index res
 
 
 download_source:
-	mkdir -p $$PWD/$(DIR)/build/base_os/source 
-	make _download_source DIR=product
+	mkdir -p $(DIR)/product/build/base_os/source 
+	make _download_source DIR=$(DIR)/product
 
 .PHONY: tool
 tool_config:
-	@mkdir -p tool/build/base_os/config/
-	@podman run   --rm -it  -v "$$PWD/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool packages > tool/build/base_os/config/packages
-	@podman run   --rm -it  -v "$$PWD/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool settings > tool/build/base_os/config/settings
-	@dos2unix tool/build/base_os/config/packages 
-	@dos2unix tool/build/base_os/config/settings
+	@mkdir -p $(DIR)/tool/build/base_os/config/
+	@podman run   --rm -it  -v "$(DIR)/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool packages > $(DIR)/tool/build/base_os/config/packages
+	@podman run   --rm -it  -v "$(DIR)/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool settings > $(DIR)/tool/build/base_os/config/settings
+	@dos2unix $(DIR)/tool/build/base_os/config/packages 
+	@dos2unix $(DIR)/tool/build/base_os/config/settings
 
 
 tool_init: 
-	make _init DIR=tool
+	make _init DIR=$(DIR)/tool
 tool_prepare: 
-	make _prepare DIR=tool
+	make _prepare DIR=$(DIR)/tool
 
 tool_public_build: 
-	make _public_build DIR=tool
+	make _public_build DIR=$(DIR)/tool
 
 tool_test: 
-	make _test DIR=test
+	make _test DIR=$(DIR)/tool/test
 
 tool_download: 
-	make _download DIR=tool
+	make _download DIR=$(DIR)/tool
 tool_private_build: 
-	make _private_build DIR=tool
+	make _private_build DIR=$(DIR)/tool
 tool_aggregate: 
-	make _aggregate DIR=tool
+	make _aggregate DIR=$(DIR)/tool
 tool_index: 
-	make _index DIR=tool
+	make _index DIR=$(DIR)/tool
 tool_res: 
-	make _res DIR=tool
+	make _res DIR=$(DIR)/tool
 
 tool_download_source:
-	make _download_source DIR=tool
+	make _download_source DIR=$(DIR)/tool
 
-tool_build: tool_config tool_init tool_prepare tool_public_build tool/builder/Makefile tool/builder/build.sh 
+build: init config prepare public_build download private_build test aggregate
+tool_build: tool_init tool_config  tool_prepare tool_public_build tool_download tool_private_build tool_aggregate # tool/builder/Makefile tool/builder/build.sh 
 tool_prod_build:  keygen  check  pkg 
 tool_resolve: clone tool_index tool_res 
 
@@ -141,11 +149,11 @@ PACKAGE=musl
 REPO=main
 
 abuild: 
-	#podman run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root build PACKAGE=$(PACKAGE) ARCH=$(ARCH) REPO=$(REPO) 
-	podman run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) sh /root/build.sh $(PACKAGE) $(ARCH) $(REPO) 
+	#podman run -i -t  -v "$(DIR)/tool/download/alpine/:/download"  -v "$(CWD)/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root build PACKAGE=$(PACKAGE) ARCH=$(ARCH) REPO=$(REPO) 
+	podman run -i -t  -v "$$CWD/tool/download/alpine/:/download"  -v "$(CWD)/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) sh /root/build.sh $(PACKAGE) $(ARCH) $(REPO) 
 
 shell:
-	podman run -i -t  -v "$$PWD/tool/download/alpine/:/download"  -v "$(PWD)/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) sh 
+	podman run -i -t  -v "$$CWD/tool/download/alpine/:/download"  -v "$(CWD)/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) sh 
 
 
 REPOS =  $(shell ls product/build/base_os/source/repo )
@@ -161,7 +169,7 @@ check:
 	do                                      \
 	for i in `ls product/build/base_os/source/repo/$${repo}`;             \
 	do                                  \
-		if podman run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root check ARCH=${ARCH} PACKAGE=$${i} REPO=$${repo} ; then \
+		if podman run -i -t -v "$(CWD)/tool/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root check ARCH=${ARCH} PACKAGE=$${i} REPO=$${repo} ; then \
 		   $(ECHO) -e "passed\t$${repo}\t$${i}" >> $(VERIFY_LOG);  \
                 else \
 		   $(ECHO) -e "failed\t$${repo}\t$${i}" >> $(VERIFY_LOG);  \
@@ -181,7 +189,7 @@ pkg:
 		tm=`date +"%s"`; \
 		$(ECHO) -e "$$tm\start\t$${repo}\t$${i}" >> $(BUILD_LOG);  \
 		if true ; then \
-		   podman run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $${i} ${ARCH} $${repo}  ; \
+		   podman run -i -t -v "$(CWD)/tool/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $${i} ${ARCH} $${repo}  ; \
 		   tm=`date +"%s"`; \
 		   $(ECHO) -e "$$tm\tstop\tOK" >> $(BUILD_LOG);  \
                 else \
@@ -200,8 +208,8 @@ keygen:
 sign:
 	@for repo in ${REPOS};                   \
 	do                                      \
-	   podman run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root   $(TOOLS_IMAGE)  make -C /root index ARCH=${ARCH}  REPO=$${repo} ; \
-	   podman run -i -t -v "$(PWD)/tool/apk:/var/local/packages" -v "$(PWD)/tool/pki:/pki"  -v $(PWD)/product/build/base_os/source/repo:/aports  -v $(PWD)/tool/builder:/root  $(TOOLS_IMAGE)   make -C /root sign  ARCH=${ARCH}  REPO=$${repo} ; \
+	   podman run -i -t -v "$(CWD)/tool/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root   $(TOOLS_IMAGE)  make -C /root index ARCH=${ARCH}  REPO=$${repo} ; \
+	   podman run -i -t -v "$(CWD)/tool/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root  $(TOOLS_IMAGE)   make -C /root sign  ARCH=${ARCH}  REPO=$${repo} ; \
 	done
 
 TEST_MAKEFILE = $(DIR)/test/Makefile

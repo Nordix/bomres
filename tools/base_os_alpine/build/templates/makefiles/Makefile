@@ -1,3 +1,10 @@
+#
+#  tools/base_os_alpine/build/templates/makefiles/Makefile
+#
+#  This file is written to stdout out by the command below
+#  podman run docker.io/bomres/base_os_alpine init
+#
+
 include config/settings
 
 BUILDER_IMAGE=alpine_builder
@@ -58,7 +65,7 @@ clean:
 
 # Test the newly created build image by invoke a shell in the container 
 test_builder:
-	podman run -i -t -v "$$PWD/packages/alpine:/packages"  --entrypoint=/bin/bash ${BUILDER_IMAGE} 
+	podman run -i -t -v "$(CWD)/packages/alpine:/packages"  --entrypoint=/bin/bash ${BUILDER_IMAGE} 
 
 
 
@@ -69,7 +76,7 @@ public_build:  $(PAYLOAD_CONTAINER_FILE)
 	podman run --rm -i  $(CONTAINER_IMAGE)  /bin/sh -c 'apk info -v 2> /dev/null' > sbom/os.apk
 
 private_build:  $(PAYLOAD_CONTAINER_FILE)
-	podman run -v$(CWD)/$(BUILD_DIR):/rootfs  -v "$$PWD/download/alpine/:/download"  --rm $(BUILDER_IMAGE)  -a  $(ARCH)   -b -s -t UTC -r v$(ALPINE_VERSION) -m /download -p $(PACKAGE_LIST)   > $(BUILD_DIR)/rootfs.tar.gz
+	podman run -v$(CWD)/$(BUILD_DIR):/rootfs  -v "$(CWD)/download/alpine/:/download"  --rm $(BUILDER_IMAGE)  -a  $(ARCH)   -b -s -t UTC -r v$(ALPINE_VERSION) -m /download -p $(PACKAGE_LIST)   > $(BUILD_DIR)/rootfs.tar.gz
 	cd $(BUILD_DIR) && podman build -t $(CONTAINER_IMAGE) -f Containerfile .
 	podman run --rm -i  $(CONTAINER_IMAGE) /bin/sh -c '/usr/local/bin/bom.sh 2> /dev/null' > sbom/os.bom
 	cat config/packages  > sbom/os.conf	
