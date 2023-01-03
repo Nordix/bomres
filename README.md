@@ -49,7 +49,7 @@ podman version 3.4.4
 To run bomres as a containerized toolset, perform the following steps:
 
 ```bash
-$ podman run -it --rm docker.io/bomres/base_os_alpine make > Makefile
+$ podman run  --rm docker.io/bomres/base_os_alpine make > Makefile
 $ make config
 $ vim product/build/base_os/config/packages
 $ vim product/build/base_os/config/settings
