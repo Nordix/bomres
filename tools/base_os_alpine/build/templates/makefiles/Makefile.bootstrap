@@ -136,9 +136,9 @@ tool_download_source:
 	make _download_source DIR=$(DIR)/tool
 
 build: init config prepare public_build download private_build test aggregate
-resolve: clone index res download_source  
+resolve: clone index res download_source 
 
-tool_build: tool_init tool_config  tool_prepare tool_public_build tool_download tool_private_build tool_aggregate  tool/builder/Makefile tool/builder/build.sh 
+tool_build: tool_config  tool_init  tool_prepare tool_public_build  tool_download tool_private_build tool/builder/Makefile tool/builder/build.sh  # tool_aggregate  tool/builder/Makefile tool/builder/build.sh 
 tool_prod_build:   keygen  check  pkg 
 tool_resolve: clone tool_index tool_res 
 
@@ -170,7 +170,7 @@ check:
 	do                                      \
 	for i in `ls product/build/base_os/source/repo/$${repo}`;             \
 	do                                  \
-		if podman run -i  -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root check ARCH=${ARCH} PACKAGE=$${i} REPO=$${repo} ; then \
+		if podman run -i  -v "$(CWD)/product/build/base_os/download/alpine/:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root check ARCH=${ARCH} PACKAGE=$${i} REPO=$${repo} ; then \
 		   $(ECHO) -e "passed\t$${repo}\t$${i}" >> $(VERIFY_LOG);  \
                 else \
 		   $(ECHO) -e "failed\t$${repo}\t$${i}" >> $(VERIFY_LOG);  \
