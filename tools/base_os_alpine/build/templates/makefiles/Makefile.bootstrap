@@ -15,6 +15,7 @@ CWD := $(shell cd -P -- '$(shell dirname -- "$0")' && pwd -P)
 DIR ?= $(CWD)
 
 
+
 help:
 	@echo ""
 	@echo "Build reference image"
@@ -24,11 +25,11 @@ help:
 
 _config:
 	@mkdir -p $(DIR)/build
-	@podman run   --rm -it $(OPTIONS)  -v "$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config
+	@podman run   --rm  $(OPTIONS)  -v "$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config
 
 
 _init:
-	@podman run   --rm -it $(OPTIONS)  -v "$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  init
+	@podman run   --rm  $(OPTIONS)  -v "$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  init
 
 
 _prepare:
@@ -52,7 +53,7 @@ _sh:
 	@make -C $(DIR)/test  sh DIR=$(DIR)
 
 _aggregate: 
-	@podman run   --rm -it $(OPTIONS)  -v "$(DIR)/build:/sandbox"  $(BASE_OS_IMAGE)  aggregate
+	@podman run   --rm  $(OPTIONS)  -v "$(DIR)/build:/sandbox"  $(BASE_OS_IMAGE)  aggregate
 
 aggregate: 
 	make _aggregate DIR=$(DIR)/product
@@ -80,24 +81,22 @@ index:
 
 clone: 
 	mkdir -p $(TEMPDIR)/src $(TEMPDIR)/index $(TEMPDIR)/checkout $(TEMPDIR)/cache
-	podman run -i -t -v  $(TEMPDIR)/src:/mnt/alpine/src    $(RESOLVER_IMAGE) clone 
+	podman run  -v  $(TEMPDIR)/src:/mnt/alpine/src    $(RESOLVER_IMAGE) clone 
 
 _index:
-	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v  "$(TEMPDIR)/src:/mnt/alpine/src" -v  "$(TEMPDIR)/checkout:/mnt/alpine/checkout"  -v  "$(TEMPDIR)/cache:/mnt/alpine/cache" $(RESOLVER_IMAGE) index
+	podman run  -v "$(DIR)/build/base_os/sbom:/sbom" -v  "$(TEMPDIR)/src:/mnt/alpine/src" -v  "$(TEMPDIR)/checkout:/mnt/alpine/checkout"  -v  "$(TEMPDIR)/cache:/mnt/alpine/cache" $(RESOLVER_IMAGE) index
 
 _res: 
-	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom"  -v "$(TEMPDIR)/cache:/mnt/alpine/cache"  $(RESOLVER_IMAGE) resolve
+	podman run  -v "$(DIR)/build/base_os/sbom:/sbom"  -v "$(TEMPDIR)/cache:/mnt/alpine/cache"  $(RESOLVER_IMAGE) resolve
 
 _download_source:
-	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal patch
-	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal code
-	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal build
-	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external patch
-	podman run -i -t -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
+	podman run  -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal patch
+	podman run  -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal code
+	podman run  -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download internal build
+	podman run  -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external patch
+	podman run  -v "$(DIR)/build/base_os/sbom:/sbom" -v "$(TEMPDIR)/src:/mnt/alpine/src" -v "$(DIR)/build/base_os/source:/source"  $(RESOLVER_IMAGE) download external code
 
 
-build: init config prepare public_build download private_build test aggregate
-resolve: clone index res 
 
 
 download_source:
@@ -107,10 +106,8 @@ download_source:
 .PHONY: tool
 tool_config:
 	@mkdir -p $(DIR)/tool/build/base_os/config/
-	@podman run   --rm -it  -v "$(DIR)/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool packages > $(DIR)/tool/build/base_os/config/packages
-	@podman run   --rm -it  -v "$(DIR)/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool settings > $(DIR)/tool/build/base_os/config/settings
-	@dos2unix $(DIR)/tool/build/base_os/config/packages 
-	@dos2unix $(DIR)/tool/build/base_os/config/settings
+	@podman run   --rm   -v "$(DIR)/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool packages > $(DIR)/tool/build/base_os/config/packages
+	@podman run   --rm   -v "$(DIR)/product/build/base_os/sbom:/sbom"  $(RESOLVER_IMAGE) tool settings > $(DIR)/tool/build/base_os/config/settings
 
 
 tool_init: 
@@ -139,27 +136,31 @@ tool_download_source:
 	make _download_source DIR=$(DIR)/tool
 
 build: init config prepare public_build download private_build test aggregate
-tool_build: tool_init tool_config  tool_prepare tool_public_build tool_download tool_private_build tool_aggregate # tool/builder/Makefile tool/builder/build.sh 
-tool_prod_build:  keygen  check  pkg 
+resolve: clone index res download_source  
+
+tool_build: tool_init tool_config  tool_prepare tool_public_build tool_download tool_private_build tool_aggregate  tool/builder/Makefile tool/builder/build.sh 
+tool_prod_build:   keygen  check  pkg 
 tool_resolve: clone tool_index tool_res 
+
+
+#
+#  Rules below related to rebuild of software in product directory by use of tool ( generated by product SBOM ) 
+#
 
 # PACKAGE=prometheus-node-exporter
 # REPO=community
 PACKAGE=musl
 REPO=main
+ARCH=x86_64
 
-abuild: 
-	#podman run -i -t  -v "$(DIR)/tool/download/alpine/:/download"  -v "$(CWD)/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root build PACKAGE=$(PACKAGE) ARCH=$(ARCH) REPO=$(REPO) 
-	podman run -i -t  -v "$$CWD/tool/download/alpine/:/download"  -v "$(CWD)/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) sh /root/build.sh $(PACKAGE) $(ARCH) $(REPO) 
 
 shell:
-	podman run -i -t  -v "$$CWD/tool/download/alpine/:/download"  -v "$(CWD)/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) sh 
+	podman run -i -t  -v "$(CWD)/product/build/base_os/download:/download"  -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) sh 
 
 
 REPOS =  $(shell ls product/build/base_os/source/repo )
 
 ECHO      = $(shell which echo 2> /dev/null)
-ARCH=x86_64
 
 VERIFY_LOG=verify.log
 
@@ -169,7 +170,7 @@ check:
 	do                                      \
 	for i in `ls product/build/base_os/source/repo/$${repo}`;             \
 	do                                  \
-		if podman run -i -t -v "$(CWD)/tool/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root check ARCH=${ARCH} PACKAGE=$${i} REPO=$${repo} ; then \
+		if podman run -i  -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) make -C /root check ARCH=${ARCH} PACKAGE=$${i} REPO=$${repo} ; then \
 		   $(ECHO) -e "passed\t$${repo}\t$${i}" >> $(VERIFY_LOG);  \
                 else \
 		   $(ECHO) -e "failed\t$${repo}\t$${i}" >> $(VERIFY_LOG);  \
@@ -181,15 +182,16 @@ check:
 BUILD_LOG=build.log
 
 pkg:
+	mkdir -p $(CWD)/product/apk
 	rm -f $(PROGRESS_LOG)
 	@for repo in ${REPOS};                   \
 	do                                      \
 	for i in `ls product/build/base_os/source/repo/$${repo}`;             \
 	do                                  \
 		tm=`date +"%s"`; \
-		$(ECHO) -e "$$tm\start\t$${repo}\t$${i}" >> $(BUILD_LOG);  \
+		$(ECHO) -e "$$tm\tstart\t$${repo}\t$${i}" >> $(BUILD_LOG);  \
 		if true ; then \
-		   podman run -i -t -v "$(CWD)/tool/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $${i} ${ARCH} $${repo}  ; \
+		   podman run -i  -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $${i} ${ARCH} $${repo}  ; \
 		   tm=`date +"%s"`; \
 		   $(ECHO) -e "$$tm\tstop\tOK" >> $(BUILD_LOG);  \
                 else \
@@ -200,16 +202,16 @@ pkg:
 	done
 
 keygen:
-	mkdir -p tool/pki 
-	openssl genrsa -out tool/pki/iafw.rsa 1024
-	openssl rsa -in tool/pki/iafw.rsa -pubout > tool/pki/iafw.rsa.pub
-	chmod 755 -R tool/pki
+	mkdir -p $(CWD)/tool/pki 
+	openssl genrsa -out $(CWD)/tool/pki/iafw.rsa 1024
+	openssl rsa -in $(CWD)/tool/pki/iafw.rsa -pubout > $(CWD)/tool/pki/iafw.rsa.pub
+	chmod 755 -R $(CWD)/tool/pki
 
 sign:
 	@for repo in ${REPOS};                   \
 	do                                      \
-	   podman run -i -t -v "$(CWD)/tool/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root   $(TOOLS_IMAGE)  make -C /root index ARCH=${ARCH}  REPO=$${repo} ; \
-	   podman run -i -t -v "$(CWD)/tool/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root  $(TOOLS_IMAGE)   make -C /root sign  ARCH=${ARCH}  REPO=$${repo} ; \
+	   podman run -i -t -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root   $(TOOLS_IMAGE)  make -C /root index ARCH=${ARCH}  REPO=$${repo} ; \
+	   podman run -i -t -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root  $(TOOLS_IMAGE)   make -C /root sign  ARCH=${ARCH}  REPO=$${repo} ; \
 	done
 
 TEST_MAKEFILE = $(DIR)/test/Makefile
@@ -305,3 +307,8 @@ $(BUILDER_MAKEFILE) :
 	echo "" >> $@
 
 
+#
+# Rule that build one package , 2023-01-03 , not yet migrated to  podman
+#
+abuild: 
+	podman run -i  -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $(PACKAGE) $(ARCH) $(REPO)
