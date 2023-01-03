@@ -1,2 +1,2 @@
 FROM quay.io/podman/stable
-RUN yum -y install make tree openssl dos2unix
+RUN yum -y install make tree openssl 
