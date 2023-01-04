@@ -95,8 +95,13 @@ def get_internal_code(sbom, srcdir, dstdir, mode, src_type, debug):
            sys.stdout.write("repo: %s\n" % repo) 
         if 'source' in sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]:
             source = sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]['source']
-            hash = sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]['hash']
+            # Issue 83  is about commit state mismatch 
+            if src_type in ['build']:
+               hash = sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]['tag']
+            else: 
+               hash = sbom['metadata']['aggregator']['alpine']['aports']['repo'][repo]['hash']
             git_manager.checkout(hash, "%s/%s" % (srcdir, ALPINE_REPO_NAME))
+            
 
             # Iterate through all packages
             for package in source:

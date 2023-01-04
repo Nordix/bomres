@@ -107,7 +107,7 @@ python_aggregate:
 #
 #  mkdir -p /tmp/sandbox 
 #  cd /tmp/sandbox 
-#  docker run -it --rm docker.io/bomres/base_os_alpine make > Makefile
+#  docker run --rm docker.io/bomres/base_os_alpine make > Makefile
 #  make config
 #  make resolve 
 #
@@ -115,44 +115,45 @@ pip:
 	( cd ../build/bomres  && pip3 install . )
 
 SANDBOX=/tmp/sandbox
+
+apklib: 
+	python3 ../build/bomres/bomres/lib/apklib.py --checkout  /tmp/alpine/checkout/ --src /tmp/alpine/src/  --name  musl --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json    --output /tmp/a 
+
 ind_0: 
-	rm -f  $(PWD)/$(DIR)/build/base_os/sbom/index.json 
+	rm -f  $(SANDBOX)/product/build/base_os/sbom/index.json 
 	python3  ../build/bomres/bomres/lib/aggregate_bom.py      --pkgindex $(SANDBOX)/product/build/base_os/sbom/apkindex.tar   --output   $(SANDBOX)/product/build/base_os/sbom/index.json
 
 ind_1: 
-	python3  ../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json     --src      /tmp/alpine/src        --checkout   /tmp/alpine/checkout --cache /tmp/alpine/cache --debug # --deep
+	python3  ../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json     --src      /tmp/alpine/src        --checkout   /tmp/alpine/checkout --cache /tmp/alpine/cache --debug   --deep
 
 ind_2: 
 	python3  ../build/bomres/bomres/lib/parse_apkbuild.py     --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json     --checkout /tmp/alpine/checkout   --cache      /tmp/alpine/cache
 
-res_0: 
-	python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages $(SANDBOX)/product/build/base_os/sbom/aggregated.json    --cache /tmp/alpine/cache         --output $(SANDBOX)/product/build/base_os/sbom/resolved.json #  --debug 
 
 
-python_index: 
-	# Extract information from all APKINDEX.tar.gz used in the binary build , output  is index.json 
-	python3  ../build/bomres/bomres/lib/aggregate_bom.py      --pkgindex $(PWD)/$(DIR)/build/base_os/sbom/apkindex.tar   --output   $(PWD)/$(DIR)/build/base_os/sbom/index.json
-
-	# Checkout anc copy internal code, patches and APKBUILD from aports repository , directory structure in  /tmp/alpine/checkout 
-        # Each repo tag is retrieved from index.json 
-	python3  ../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(PWD)/$(DIR)/build/base_os/sbom/index.json     --src      /tmp/alpine/src        --checkout   /tmp/alpine/checkout --cache /tmp/alpine/cache --debug # --deep
-
-        # Create /tmp/alpine/cache/APKINDEX-aa847b1b1602c1d767b7c58a148ff93c.json based on index.json and metadata from parsed aports data 
-	python3  ../build/bomres/bomres/lib/parse_apkbuild.py     --apkindex $(PWD)/$(DIR)/build/base_os/sbom/index.json     --checkout /tmp/alpine/checkout   --cache      /tmp/alpine/cache
+python_index: ind_0 ind_1 ind_2 
 
 
 python_resolve: 
-	python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages $(PWD)/$(DIR)/build/base_os/sbom/aggregated.json    --cache /tmp/alpine/cache         --output $(PWD)/$(DIR)/build/base_os/sbom/resolved.json #  --debug 
+	python3  ../build/bomres/bomres/lib/resolve_bom.py   --packages $(SANDBOX)/product/build/base_os/sbom/aggregated.json    --cache /tmp/alpine/cache         --output $(SANDBOX)/product/build/base_os/sbom/resolved.json #  --debug 
 
 
-python_file: 
-	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode internal --type patch  --debug
-	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode internal --type code  --debug
-	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode internal --type build  --debug
+src_dir:
+	rm -rf   $(SANDBOX)/product/build/base_os/source
+	mkdir -p $(SANDBOX)/product/build/base_os/source
+ip: 
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode internal --type patch  --debug
+ic: 
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode internal --type code  --debug
+ib: 
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode internal --type build  --debug
 
-	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode external --type code  --debug
-	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(PWD)/$(DIR)/build/base_os/sbom/resolved.json   --output $(PWD)/$(DIR)/build/base_os/source  --mode external --type patch  --debug
+ec: 
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode external --type code  --debug
+ep: 
+	python3 ../build/bomres/bomres/lib/get_file_git.py  --src /tmp/alpine/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode external --type patch  --debug
 
+python_file: src_dir  ip ic ib ec ep 
 
 
 ptool: 
