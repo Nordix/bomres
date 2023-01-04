@@ -155,8 +155,10 @@ ARCH=x86_64
 
 
 shell:
-	podman run -i -t  -v "$(CWD)/product/build/base_os/download:/download"  -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE) sh 
+	podman run -i -t -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE)   sh # sh -x /root/build.sh  $(PACKAGE) $(ARCH) $(REPO)
 
+abuild: 
+	podman run -i  -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $(PACKAGE) $(ARCH) $(REPO)
 
 REPOS =  $(shell ls product/build/base_os/source/repo )
 
@@ -307,8 +309,3 @@ $(BUILDER_MAKEFILE) :
 	echo "" >> $@
 
 
-#
-# Rule that build one package , 2023-01-03 , not yet migrated to  podman
-#
-abuild: 
-	podman run -i  -v "$(CWD)/product/apk:/var/local/packages" -v "$(CWD)/tool/pki:/pki"  -v $(CWD)/product/build/base_os/source/repo:/aports  -v $(CWD)/tool/builder:/root $(TOOLS_IMAGE)   sh /root/build.sh  $(PACKAGE) $(ARCH) $(REPO)
