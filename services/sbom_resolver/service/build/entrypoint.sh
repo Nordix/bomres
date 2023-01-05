@@ -31,9 +31,7 @@ elif [ "$1" = 'deep' ]; then
 
 
 elif [ "$1" = 'tool' ]; then
-   if [ "$#" -eq 1 ]; then
-      cat /Makefile.tool
-   elif [ "$#" -eq 2 ]; then
+   if [ "$#" -eq 2 ]; then
       if [ "$2" = "packages"  ]; then
          exec sbom-resolver-resolve_tool    --resolved /sbom/resolved.json   --packages
       elif [ "$2" = "settings"  ]; then
@@ -73,12 +71,9 @@ elif [ "$1" = 'download' ]; then
       fi
    fi
 
-elif [ "$1" = 'make' ]; then
-    cat /Makefile.bootstrap
 elif [ "$1" = 'help' ]; then
    echo ""
    echo "init     :  Create a directory structure with tools needed to build a Alpine Base Image"
-   echo "make     :  Outputs a simple Makefile for building and resolving Alpine "
    echo "download :  "
    echo "           internal: Download all code and patches from Alpine Aports repository "
    echo "           external: Download all code and patches from external sources"

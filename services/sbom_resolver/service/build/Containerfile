@@ -2,10 +2,10 @@ ARG IMAGE
 FROM ${IMAGE}
 
 LABEL org.opencontainers.image.title="SBOM Resolver"
-LABEL org.opencontainers.image.created="2022-01-17"
+LABEL org.opencontainers.image.created="2023-01-05"
 LABEL org.opencontainers.image.revision="A"
-LABEL org.opencontainers.image.vendor="Ericsson"
-LABEL org.opencontainers.image.authors=hans.thorsen@ericsson.com
+LABEL org.opencontainers.image.vendor="Lamm Consulting AB"
+LABEL org.opencontainers.image.authors=hans@lammda.se
 
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
@@ -13,7 +13,6 @@ ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 COPY bomres /src
 RUN pip3 install /src
 
-# Two candidates , not yet integrated , the development server is currently used in production
 RUN pip3 install uwsgi
 RUN pip3 install gunicorn
 
@@ -25,7 +24,6 @@ RUN chmod u+x,g+x /entrypoint.sh; \
     openssl rsa -in priv.pem -pubout > pub.pem; \
     rm -rf /src
 
-COPY Makefile.bootstrap /Makefile.bootstrap
 COPY Makefile.tool /Makefile.tool
 COPY entrypoint.sh /entrypoint.sh
 RUN  chmod u+x,g+x,o+x  /entrypoint.sh

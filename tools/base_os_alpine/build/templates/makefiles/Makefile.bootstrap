@@ -138,7 +138,7 @@ tool_download_source:
 build: init config prepare public_build download private_build test aggregate
 resolve: clone index res download_source 
 
-tool_build: tool_config  tool_init  tool_prepare tool_public_build  tool_download tool_private_build tool/builder/Makefile tool/builder/build.sh  # tool_aggregate  tool/builder/Makefile tool/builder/build.sh 
+tool_build: tool_config  tool_init  tool_prepare tool_public_build  tool_download tool_private_build tool_aggregate tool/builder/Makefile tool/builder/build.sh  
 tool_prod_build:   keygen  check  pkg 
 tool_resolve: clone tool_index tool_res 
 
