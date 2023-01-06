@@ -136,8 +136,9 @@ cycle: pip aggregate python_index python_resolve python_file
 #
 #################################################   
 
+PACKAGE=apk-tools
 apklib: 
-	python3 ../../build/bomres/bomres/lib/apklib.py --checkout $(ALPINE_REPO)/checkout/ --src $(ALPINE_REPO)/src/  --name  musl --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json    --output /tmp/apklib.json
+	python3 ../../build/bomres/bomres/lib/apklib.py --checkout $(ALPINE_REPO)/checkout/ --src $(ALPINE_REPO)/src/  --name  $(PACKAGE) --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json    --output /tmp/apklib.json
 
 
 #################################################   

@@ -9,15 +9,15 @@ BUILDER_IMAGE=alpine_builder
 
 
 BASE_OS_IMAGE=sbom_resolver_base_os
-BASE_OS_VERSION=3.16.3
+BASE_OS_VERSION=3.16.4
 
 
 # Labels in Container
 IMAGE_TITLE="Alpine Base OS for SBOM Resolver"
-IMAGE_CREATED="2022-12-27"
+IMAGE_CREATED="2023-01-06"
 IMAGE_REVISION="A"
 IMAGE_VENDOR="Lamm Consulting"
-IMAGE_VERSION=3
+IMAGE_VERSION=4
 IMAGE_AUTHOR=hans@lammda.se
 
 

@@ -9,6 +9,8 @@ BASE_OS_IMAGE   = docker.io/bomres/base_os_alpine
 RESOLVER_IMAGE  = docker.io/bomres/alpine_resolver
 TOOLS_IMAGE     = alpine_sandbox_base_os_tool:3.16.1
 
+APORTS_REPO     = https://git.alpinelinux.org/aports
+
 TEMPDIR=/tmp/alpine
 
 CWD := $(shell cd -P -- '$(shell dirname -- "$0")' && pwd -P)
@@ -81,7 +83,7 @@ index:
 
 clone: 
 	mkdir -p $(TEMPDIR)/src $(TEMPDIR)/index $(TEMPDIR)/checkout $(TEMPDIR)/cache
-	podman run  -v  $(TEMPDIR)/src:/mnt/alpine/src    $(RESOLVER_IMAGE) clone 
+	podman run -i -t  -v  $(TEMPDIR)/src:/mnt/alpine/src    $(RESOLVER_IMAGE) clone $(APORTS_REPO) 
 
 _index:
 	podman run  -v "$(DIR)/build/base_os/sbom:/sbom" -v  "$(TEMPDIR)/src:/mnt/alpine/src" -v  "$(TEMPDIR)/checkout:/mnt/alpine/checkout"  -v  "$(TEMPDIR)/cache:/mnt/alpine/cache" $(RESOLVER_IMAGE) index

@@ -1,11 +1,17 @@
+#
+#  Generate two containers 
+#   1. Builder for Alpine base image 
+#   2. Resolver for Alpine base image , Linux + Python  layer 
 
 
-# Build on local host 
+all: build push 
 
-all: base_os_alpine bom_resolver 
+#  BUILD CONTAINERS 
+
+build: base_os_alpine bom_resolver 
 
 base_os_alpine: 
-	make -C tools/base_os_alpine local 
+	make -C tools/base_os_alpine build
 
 bom_resolver: bom_resolver_base_os  bom_resolver_service
 
@@ -15,10 +21,8 @@ bom_resolver_base_os:
 bom_resolver_service:
 	make -C services/sbom_resolver/service/build build
 
-clean: 
-	make -C tools/base_os_alpine clean 
 
-#  Push to container registry 
+#  PUSH CONTAINERS  
 
 REGISTRY ?= docker.io
 REPOSITORY ?= bomres
@@ -29,15 +33,7 @@ push_bom_resolver:
 	make -C services/sbom_resolver/service/deploy tag  REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY)
 	make -C services/sbom_resolver/service/deploy push REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY)
 
-push_robot_test: 
-	make -C tools/robot/service/deploy tag  REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY) 
-	make -C tools/robot/service/deploy push  REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY) 
-
-#  Deploy on development k8 cluster 
-
-deploy: 
-	make -C services/sbom_resolver/service/deploy/k8_simple deploy
-
-status: 
-	make -C services/sbom_resolver/service/deploy/k8_simple status
+push_base_os_alpine: 
+	make -C tools/base_os_alpine/deploy  tag
+	make -C tools/base_os_alpine/deploy  push
 
