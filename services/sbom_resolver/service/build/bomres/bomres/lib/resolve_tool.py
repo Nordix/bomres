@@ -129,6 +129,8 @@ def get_tools(sbom,  debug):
       s =  s + "# Minimal Alpine Base OS" + "\n\n" 
       s =  s + "alpine-base" + "\n" 
       s =  s + "util-linux" + "\n" 
+      s =  s + "\n# Transitative dependencies may be missing for apk-tools ( lua5.3 lib-static ...) \n" 
+      s =  s + "apk-tools" + "\n" 
 
       s =  s + "# Common Build tools" + "\n\n" 
       s =  s + "alpine-sdk" + "\n" 

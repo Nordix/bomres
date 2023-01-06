@@ -24,7 +24,6 @@ RUN chmod u+x,g+x /entrypoint.sh; \
     openssl rsa -in priv.pem -pubout > pub.pem; \
     rm -rf /src
 
-COPY Makefile.tool /Makefile.tool
 COPY entrypoint.sh /entrypoint.sh
 RUN  chmod u+x,g+x,o+x  /entrypoint.sh
 

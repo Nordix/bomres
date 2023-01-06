@@ -1,8 +1,5 @@
-REGISTRY ?= docker.io
-REPOSITORY ?= bomres
 
 include build/config/settings
-
 
 
 prepare:
@@ -19,12 +16,8 @@ int_build:
 test:
 	@make -C test   test 
 
-deploy:
-	@make -C deploy login   REGISTRY=$(REGISTRY)
-	@make -C deploy deploy  REGISTRY=$(REGISTRY) REPOSITORY=$(REPOSITORY)   
 
-all: clean prepare ext_build int_build  test  deploy 
-local: clean prepare ext_build int_build  test 
+build: clean prepare ext_build int_build  test 
 
 clean:
 	@make -C build clean

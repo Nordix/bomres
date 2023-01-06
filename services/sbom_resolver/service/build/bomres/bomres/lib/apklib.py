@@ -480,6 +480,7 @@ install="
                    result['makedepends'].append(temp)
 
         if (s.startswith(START_MAKECHECK) and s.endswith('"')):
+            #print("DEBUG %s\n" % s ) 
             # One line
             tmp = s.split(START_MAKECHECK)[1]
             tmp = tmp.lstrip()
@@ -784,11 +785,14 @@ install="
                     entry = skey
               else: 
                  entry = sdep
+                 if entry not in tool_dep: 
+                    tool_dep.append(entry) 
           else: 
             entry = key
         else: 
           entry = dep 
-        tool_dep.append(entry) 
+        if entry not in tool_dep: 
+           tool_dep.append(entry) 
       if 'tools' not in result: 
          result['tools'] = {}
       tmp_tool_dep = {} 
@@ -819,9 +823,12 @@ install="
                  entry = sdep
           else: 
             entry = key
+            if entry not in check_dep: 
+               check_dep.append(entry) 
         else: 
           entry = dep 
-        check_dep.append(entry) 
+        if entry not in check_dep: 
+           check_dep.append(entry) 
       if 'tools' not in result: 
          result['tools'] = {}
       tmp_check_dep = {} 
