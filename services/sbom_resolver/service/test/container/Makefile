@@ -1,3 +1,20 @@
+#################################################   
+#
+#  Test of BomResolver with Podman 
+#
+#
+#################################################   
+
+
+# Sandbox for image build 
+SANDBOX=/tmp/sandbox
+
+# Cloned repositoy of Alpine Build Manifest ( APKBUILD ) 
+ALPINE_REPO=/tmp/alpine
+
+multi: 
+	podman  build .  -t grep -f Container.grep
+
 #
 # Work in progress , dont expect this to work 
 #
