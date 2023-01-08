@@ -1,0 +1,76 @@
+#########################################################
+#
+# BUILD stage 
+#
+#########################################################
+
+# Minimal Alpine Base OS
+#
+FROM alpine:3.16 as build_stage
+# 
+# Common Build tools
+#
+RUN apk --update add alpine-sdk build-base abuild apk-tools openssl
+#
+# Additional tools needed for specific packages during build
+#
+RUN apk --update add pcre-dev autoconf automake
+
+
+#
+# Least privileged user root -> builder 
+#
+RUN adduser builder -D -h /home/builder && addgroup builder abuild 
+
+# Copy APKBUILD for grep  
+COPY aports /home/builder/aports
+RUN chown -R builder:builder /home/builder/aports
+RUN mkdir -p /var/cache/distfiles/ 
+RUN chown -R builder:builder  /var/cache/distfiles/ 
+
+#
+# Generate keys for signing 
+# RUN export PACKAGER=bomres@lammda.se && abuild-keygen -a -n -q  
+RUN mkdir -p /home/builder/.abuild 
+RUN openssl genrsa -out /home/builder/.abuild/bomres@lammda.se-deadbeef.rsa 2048
+RUN openssl rsa -in /home/builder/.abuild/bomres@lammda.se-deadbeef.rsa -pubout >  /home/builder/.abuild/bomres@lammda.se-deadbeef.rsa.pub
+RUN echo "PACKAGER_PRIVKEY=/home/builder/.abuild/bomres@lammda.se-deadbeef.rsa"  >> /etc/abuild.conf
+RUN chown -R builder:builder /home/builder/.abuild
+# deadbeef works , but should be replaced with a hex string representining date  $(printf "%x" $(date +%s)
+
+#
+# Least privileged user root -> builder 
+#
+USER builder
+
+
+# Build grep
+WORKDIR /home/builder/aports/main/grep
+RUN abuild                   
+
+#########################################################
+#
+# RUN  stage 
+#
+#########################################################
+
+FROM alpine:3.16 as runtime_stage
+
+LABEL maintainer="bomres@lammda.se" 
+
+
+# Move public key  from previous stage 
+COPY --from=build_stage /home/builder/.abuild/bomres@lammda.se-deadbeef.rsa.pub /etc/apk/keys/
+
+# Move apk's from previous stage
+COPY --from=build_stage /home/builder/packages/main/x86_64/grep-3.7-r0.apk /tmp
+
+# Install apk's
+RUN apk  add /tmp/grep-3.7-r0.apk 
+
+#
+# This is for debug of signing, to be removed  
+#
+COPY --from=build_stage /home/builder/.abuild/bomres@lammda.se-deadbeef.rsa /etc/apk/keys/
+COPY --from=build_stage /etc/abuild.conf /etc/apk/keys/abuild.conf.build_stage
+
