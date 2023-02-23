@@ -20,12 +20,12 @@ platform=${vendor}_linux_${alpine_version}
 LIST=`apk info  | grep -v WARNING`
 for p in $LIST
  do
-  LONG_VERSION=`apk info $p  | grep -v WARNING | awk -v pack="$p" 'BEGIN {RS="" FS="\n" }  {for (i=1,j=2,k=0; i<=NF; i++,j++i,k++) { if ($i == "webpage:") {printf "%s",$k ; exit }} }' 2> /dev/null`
+  LONG_VERSION=`apk info $p 2> /dev/null | grep  description | awk '{print $1}'`
   VER_REV=`echo $LONG_VERSION | sed "s/^\$p-//"`
   VERSION=`echo $VER_REV | awk -F\- '{print $1}'`
   REVISION=`echo $VER_REV | awk -F\- '{print $2}'`
-  PACKAGE=`apk info $p  | grep -v WARNING | awk -v pack="$p" 'BEGIN {RS="" FS="\n" }  {for (i=1,j=2,k=0; i<=NF; i++,j++i,k++) { if ($i == "webpage:") {printf "%s",pack ; exit }} }' 2> /dev/null`
-  URL=`apk info $p  | grep -v WARNING | awk -v pack="$p" 'BEGIN {RS="" FS="\n" }  {for (i=1,j=2,k=0; i<=NF; i++,j++i,k++) { if ($i == "webpage:") {printf "%s",$j ; exit }} }' 2> /dev/null`
+  PACKAGE=$p
+  URL=`apk info $p 2> /dev/null | grep '://' `
   echo "a,$vendor,$PACKAGE,$VERSION,$REVISION,$platform,$URL"
  done
 

@@ -1,5 +1,7 @@
 
-# Setting for Alpine
+
+# This is a template and should be customized 
+
 
 ALPINE_VERSION=3.16
 ARCH=x86_64

@@ -135,6 +135,7 @@ tool_res:
 	make _res DIR=$(DIR)/tool
 
 tool_download_source:
+	mkdir -p $(DIR)/tool/build/base_os/source 
 	make _download_source DIR=$(DIR)/tool
 
 build: init config prepare public_build download private_build test aggregate
