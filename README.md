@@ -84,10 +84,10 @@ $ make run
 bomres is current in early stages and primarily meant to demonstate the concept. All contributions, PRs, issues, comments, are welcome.
 
 
+### Instructions how to troubleshhot  
 
-```bash
+![Issue88](services/sbom_resolver/service/test/python/README.md) 
 
-```
 
 
 ## License

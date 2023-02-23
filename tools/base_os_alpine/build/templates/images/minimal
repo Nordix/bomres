@@ -1,6 +1,7 @@
 # 
-# This is the reference image 
-#
+# This is template  
+# Tt should be customized 
+
 alpine-base
 
 lighttpd #S

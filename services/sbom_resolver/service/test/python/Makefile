@@ -9,6 +9,9 @@
 
 # Sandbox for image build 
 SANDBOX=/tmp/sandbox
+SANDBOX=/opt/sandbox
+TARGET=product
+TARGET=tool
 
 # Cloned repositoy of Alpine Build Manifest ( APKBUILD ) 
 ALPINE_REPO=/tmp/alpine
@@ -17,7 +20,7 @@ ALPINE_REPO=/tmp/alpine
 pip: 
 	( cd ../../build/bomres  && pip3 install . )
 
-# In production , the Alpine reposity should be mirrored and indexed in advance 
+# In $(TARGET)ion , the Alpine reposity should be mirrored and indexed in advance 
 #                 Alpine source should be cloned to reduce network traffic and avoid rate limiting in github/gitlab 
 
 
@@ -35,8 +38,8 @@ pip:
 #################################################   
 
 aggregate:
-	python3  ../../build/bomres/bomres/lib/aggregate_bom.py  --pkgindex $(SANDBOX)/product/build/base_os/sbom/apkindex.tar    --desired $(SANDBOX)/product/build/base_os/sbom/os.conf  \
-                          --resolved $(SANDBOX)/product/build/base_os/sbom/os.bom  --config $(SANDBOX)/product/build/base_os/config/settings  --output $(SANDBOX)/product/build/base_os/sbom/aggregated.json #  --debug
+	python3  ../../build/bomres/bomres/lib/aggregate_bom.py  --pkgindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/apkindex.tar    --desired $(SANDBOX)/$(TARGET)/build/base_os/sbom/os.conf  \
+                          --resolved $(SANDBOX)/$(TARGET)/build/base_os/sbom/os.bom  --config $(SANDBOX)/$(TARGET)/build/base_os/config/settings  --output $(SANDBOX)/$(TARGET)/build/base_os/sbom/aggregated.json #  --debug
 
 
 #################################################   
@@ -58,14 +61,14 @@ aggregate:
 python_index: ind_0 ind_1 ind_2 
 
 ind_0: 
-	rm -f  $(SANDBOX)/product/build/base_os/sbom/index.json 
-	python3  ../../build/bomres/bomres/lib/aggregate_bom.py      --pkgindex $(SANDBOX)/product/build/base_os/sbom/apkindex.tar   --output   $(SANDBOX)/product/build/base_os/sbom/index.json
+	rm -f  $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json 
+	python3  ../../build/bomres/bomres/lib/aggregate_bom.py      --pkgindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/apkindex.tar   --output   $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json
 
 ind_1: 
-	python3  ../../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json     --src      $(ALPINE_REPO)/src        --checkout   $(ALPINE_REPO)/checkout --cache $(ALPINE_REPO)/cache --debug #  --deep
+	python3  ../../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json     --src      $(ALPINE_REPO)/src        --checkout   $(ALPINE_REPO)/checkout --cache $(ALPINE_REPO)/cache --debug #  --deep
 
 ind_2: 
-	python3  ../../build/bomres/bomres/lib/parse_apkbuild.py     --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json     --checkout $(ALPINE_REPO)/checkout   --cache      $(ALPINE_REPO)/cache
+	python3  ../../build/bomres/bomres/lib/parse_apkbuild.py     --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json     --checkout $(ALPINE_REPO)/checkout   --cache      $(ALPINE_REPO)/cache
 
 
 
@@ -77,7 +80,7 @@ ind_2:
 #################################################   
 
 python_resolve: 
-	python3  ../../build/bomres/bomres/lib/resolve_bom.py   --packages $(SANDBOX)/product/build/base_os/sbom/aggregated.json    --cache $(ALPINE_REPO)/cache         --output $(SANDBOX)/product/build/base_os/sbom/resolved.json #  --debug 
+	python3  ../../build/bomres/bomres/lib/resolve_bom.py   --packages $(SANDBOX)/$(TARGET)/build/base_os/sbom/aggregated.json    --cache $(ALPINE_REPO)/cache         --output $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json #  --debug 
 
 
 
@@ -97,33 +100,33 @@ python_resolve:
 python_file: src_dir  ip ic ib ec ep 
 
 src_dir:
-	rm -rf   $(SANDBOX)/product/build/base_os/source
-	mkdir -p $(SANDBOX)/product/build/base_os/source
+	rm -rf   $(SANDBOX)/$(TARGET)/build/base_os/source
+	mkdir -p $(SANDBOX)/$(TARGET)/build/base_os/source
 ip: 
-	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode internal --type patch  --debug
+	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json   --output $(SANDBOX)/$(TARGET)/build/base_os/source  --mode internal --type patch  --debug
 ic: 
-	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode internal --type code  --debug
+	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json   --output $(SANDBOX)/$(TARGET)/build/base_os/source  --mode internal --type code  --debug
 ib: 
-	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode internal --type build  --debug
+	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json   --output $(SANDBOX)/$(TARGET)/build/base_os/source  --mode internal --type build  --debug
 
 ec: 
-	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode external --type code  --debug
+	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json   --output $(SANDBOX)/$(TARGET)/build/base_os/source  --mode external --type code  --debug
 ep: 
-	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json   --output $(SANDBOX)/product/build/base_os/source  --mode external --type patch  --debug
+	python3 ../../build/bomres/bomres/lib/get_file_git.py  --src $(ALPINE_REPO)/src --resolved  $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json   --output $(SANDBOX)/$(TARGET)/build/base_os/source  --mode external --type patch  --debug
 
 
 
 #################################################   
 #
-# The "Desired" SBOM for the tool is autogenerated from the product resolved sbom 
+# The "Desired" SBOM for the tool is autogenerated from the $(TARGET) resolved sbom 
 #
 #################################################   
 
 packages: 
-	python3 ../../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json  --packages
+	python3 ../../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json  --packages
 
 settings: 
-	python3 ../../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(SANDBOX)/product/build/base_os/sbom/resolved.json  --settings
+	python3 ../../build/bomres/bomres/lib/resolve_tool.py   --resolved  $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json  --settings
 
 
 cycle: pip aggregate python_index python_resolve python_file 
@@ -138,7 +141,7 @@ cycle: pip aggregate python_index python_resolve python_file
 
 PACKAGE=apk-tools
 apklib: 
-	python3 ../../build/bomres/bomres/lib/apklib.py --checkout $(ALPINE_REPO)/checkout/ --src $(ALPINE_REPO)/src/  --name  $(PACKAGE) --apkindex $(SANDBOX)/product/build/base_os/sbom/index.json    --output /tmp/apklib.json
+	python3 ../../build/bomres/bomres/lib/apklib.py --checkout $(ALPINE_REPO)/checkout/ --src $(ALPINE_REPO)/src/  --name  $(PACKAGE) --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json    --output /tmp/apklib.json
 
 
 #################################################   
@@ -147,9 +150,9 @@ apklib:
 #
 #################################################   
 view:
-	vi $(SANDBOX)/product/build/base_os/config/settings
-	vi $(SANDBOX)/product/build/base_os/config/packages
-	vi $(SANDBOX)/product/build/base_os/sbom/resolved.json
-	tree $(SANDBOX)/product/build/base_os/source
+	vi $(SANDBOX)/$(TARGET)/build/base_os/config/settings
+	vi $(SANDBOX)/$(TARGET)/build/base_os/config/packages
+	vi $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json
+	tree $(SANDBOX)/$(TARGET)/build/base_os/source
 
 
