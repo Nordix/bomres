@@ -1,6 +1,162 @@
 
 
-# Test 
+# Overview 
+Before deep dive into the internals, lets get an overview of the setup. 
+
+## prepare sandbox  
+Start within a clean directory and execute make for the base_os_alpine container. 
+
+
+```
+$ mkdir -p /opt/sandbox
+$ cd /opt/sandbox 
+$ podman run  --rm docker.io/bomres/base_os_alpine make > Makefile
+
+```
+The make command  is passed as a parameter to /docker-entrypoint.sh inside the 
+base_os_alpine container.  Below is the code snippet that copies the Makkefile 
+to standard out. 
+NOTE: avoid use of -t argument since it may add newlines. 
+
+```
+
+#!/bin/sh                                                                                    
+if [ "$1" = 'make' ]; then                                                                                 
+    cat /opt/base_os/templates/makefiles/Makefile.bootstrap 
+fi 
+```
+ 
+
+## make config
+The product to be built requires tools, therefore there is two rules that operates 
+in different directories.
+The product resides in $(DIR)/product and tools in $(DIR)/tool. The steps are basicly the same, it is only the 
+directories that differs. 
+
+[podman](https://www.redhat.com/sysadmin/podman-inside-container) may need some configuration. 
+
+The first command in the _config: rule creates the build directory. The subdirectories are created from inside the 
+container by mount the host with the container using -v flag. This step may fail if you have missining capabilities. 
+
+```
+$HOME/.config/containers/containers.conf  med innehållet:default_capabilities = [
+     "AUDIT_WRITE",
+     "CHOWN",
+     "DAC_OVERRIDE",
+     "FOWNER",
+     "FSETID",
+     "KILL",
+     "MKNOD",
+     "NET_BIND_SERVICE",
+     "NET_RAW",
+     "SETGID",
+     "SETPCAP",
+     "SETUID",
+     "SYS_CHROOT",
+]
+```
+
+```
+DIR ?= $(CWD)
+
+config:
+         @make _config DIR=$(DIR)/product
+	
+tool_config:
+        @mkdir -p $(DIR)/tool/build/base_os/config/
+
+_config:
+
+        @mkdir -p $(DIR)/build^
+        @podman run   --rm  $(OPTIONS)  -v "$(DIR)/build:/sandbox" -w /sandbox  -e IMAGE=$(BASE_OS_IMAGE) $(BASE_OS_IMAGE)  config
+```
+
+## make build
+
+This single target calls several targets 
+
+- init 
+- config 
+- prepare 
+- public_build 
+- download 
+- private_build 
+- test 
+- aggregate
+
+For now just a subset are covered in this guide
+### init 
+
+```
+    if test ! -f /sandbox/base_os/build_dir ; then                                                           
+       mkdir -p /sandbox/base_os/build_dir/scripts                                                           
+       cp -f /opt/base_os/scripts/apk-install  /sandbox/base_os/build_dir/scripts/apk-install                
+       cp -f /opt/base_os/scripts/mkimage-alpine.bash  /sandbox/base_os/build_dir/scripts/mkimage-alpine.bash
+    fi  
+```
+The mkimage-alpine.bash takes a list of packages and installs them in a sbubdirectory. 
+
+rootfs="$(mktemp -d "${TMPDIR:-/var/tmp}/alpine-docker-rootfs-XXXXXXXXXX")"
+apk --root "$rootfs"
+
+The result is a tarball. 
+
+### prepare 
+
+The aboove build script is then used to to create a minimal build container. 
+For debug and troubleshooting a local copy is stored by podman save. 
+
+```
+builder:  clean $(BUILD_CONTAINER_FILE)
+        cd $(BUILDER_DIR) && podman build -t ${BUILDER_IMAGE} -f Containerfile .
+        mkdir -p tools
+        rm -f tools/${BUILDER_IMAGE}.tar
+        podman save ${BUILDER_IMAGE} -o tools/${BUILDER_IMAGE}.tar
+```
+### public build 
+
+Binary packages are installed here from the repository specified in the settings file. 
+The apk packaga manager keep track of all dependencies, when complete a list of all packages 
+are stored in os.apk 
+
+### download
+All packages listed in os.apk are download from main and community repository. 
+In addition to packages it also retrieves APKINDEX.tar.gz 
+
+download.bash
+```
+FS=$'\n' read -d '' -r -a arr < sbom/os.apk
+
+repo+=("main")
+repo+=("community")
+```
+### private build 
+This is basicly the same as public build, however all packages are retrieved from a local directory. 
+It also adds a bom.sh script that extract additional data from the package manager, such as project url. 
+
+### test
+currently it is just executues bom.sh and stores the result in sbom/os.bom as plain text. 
+
+### aggregate
+
+APKINDEX:tar.gz from main and community repository are added to apkindex.tar. This resulting tarfile path is passed as a parameter to aggregate_bom.py 
+together with os.bom, settings and packages. 
+
+All data about binary packages are now collected and stored in aggregated.json 
+
+
+```
+if [ "$1" = 'aggregate' ]; then                                                                                                                                         
+       cd /sandbox/base_os/download  && find . -name APKINDEX.tar.gz | cut -c3- |  tar cf /sandbox/base_os/sbom/apkindex.tar -T -
+       exec python3 /opt/base_os/scripts/aggregate_bom.py  --pkgindex /sandbox/base_os/sbom/apkindex.tar \
+                                                           --desired /sandbox/base_os/config/packages     \
+							   --config /sandbox/base_os/config/settings  \
+							   --resolved /sandbox/base_os/sbom/os.bom \
+							   --output /sandbox/base_os/sbom/aggregated.json                                                ```           ```                
+
+                                                              
+
+## Prepare debug and test 
 
 The resolved is data driven, therefore is is important to use production data when testing. 
 
@@ -8,9 +164,6 @@ Development follow the **onion** model.  Development starts from the inside, whe
 
 deployed as a container. 
 
-
-
-## Prepare debug and test 
 
 ### Install python modules 
 
@@ -20,7 +173,7 @@ Some of the modules ( get_file_git.py )  have dependencies, therefore pip instal
 import bomres.lib.git_manager as git_manager
 ```
 
-There is a rule in teh Makefile for installing python modules on your development host
+There is a rule in the Makefile for installing python modules on your development host
 
 ```
 make pip 
