@@ -1,0 +1,3 @@
+SERVICE_IMAGE=lighttpd_alpine
+SERVICE_VERSION=1.0.4
+

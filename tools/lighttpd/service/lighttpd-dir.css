@@ -1,0 +1,14 @@
+body, html { background: #E00; margin:0 }
+html { font: 14px/1.4 Raleway, 'Helvetica Neue', Helvetica, sans-serif; color: #2B2B2B; font-weight: 400 }
+
+h2 { font-weight: 200; font-size: 45px; margin: 20px 35px }
+
+div.list { background: white; padding: 20px 35px }
+div.foot { color: #000; margin-top: 35px; padding: 20px 35px }
+
+td { padding: 0 20px; line-height: 21px }
+tr:hover { background: #EEE }
+
+a { color: #FF0000 }
+a:visited { color: #FF0000 }
+a:hover { color: #FF0000 }
