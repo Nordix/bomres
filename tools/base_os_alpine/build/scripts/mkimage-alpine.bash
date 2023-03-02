@@ -40,7 +40,7 @@ build() {
 			add --arch $arch --initdb ${packages[*]//,/ }
 		[[ "$ADD_BASELAYOUT" ]] && \
 			apk --root "$rootfs" --keys-dir /etc/apk/keys \
-				fetch --stdout --arch $arch alpine-base | tar -xvz -C "$rootfs" etc
+				fetch --stdout --arch $arch alpine-base | tar -xvz -C "$rootfs" 
 		rm -f "$rootfs/var/cache/apk"/*
 		[[ "$TIMEZONE" ]] && \
 			cp "/usr/share/zoneinfo/$TIMEZONE" "$rootfs/etc/localtime"
@@ -51,10 +51,7 @@ build() {
 	[[ "$ADD_APK_SCRIPT" ]] && cp /apk-install "$rootfs/usr/sbin/apk-install"
 	tar -z -f /rootfs/rootfs.tar.gz --numeric-owner -C "$rootfs" -c .
 
-	# save
 	return 0
-	tar -z -f rootfs.tar.gz --numeric-owner -C "$rootfs" -c .
-	[[ "$STDOUT" ]] && cat rootfs.tar.gz
 
 }
 

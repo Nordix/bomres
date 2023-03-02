@@ -1,0 +1,28 @@
+ARG BASE_OS_IMAGE
+FROM ${BASE_OS_IMAGE}
+
+LABEL org.opencontainers.image.title="Alpine repo service"
+LABEL org.opencontainers.image.created="2023-02-15"
+LABEL org.opencontainers.image.revision="A"
+LABEL org.opencontainers.image.vendor="Lammda"
+LABEL org.opencontainers.image.version=1
+LABEL org.opencontainers.image.authors=hans@lammda.se
+
+COPY  entrypoint.sh /entrypoint.sh
+RUN   chmod u+x,g+x /entrypoint.sh
+
+COPY lighttpd.conf /etc/lighttpd/lighttpd.conf 
+COPY alpine/  /alpine
+RUN  chown -R lighttpd:lighttpd  /alpine 
+USER lighttpd
+
+
+EXPOSE 8080
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD [ "server"]
+
+
+
+

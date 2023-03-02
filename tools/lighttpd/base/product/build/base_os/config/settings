@@ -1,0 +1,23 @@
+
+# Setting for Alpine
+
+ALPINE_VERSION=3.17
+ARCH=x86_64
+REPO_URL=http://dl-cdn.alpinelinux.org/alpine
+
+BUILDER_IMAGE=alpine_builder
+
+
+BASE_OS_IMAGE=lighttpd_alpine
+BASE_OS_VERSION=1.0.1
+
+
+# Labels in Container
+IMAGE_TITLE="Alpine Base OS Image with lighttpd"
+IMAGE_CREATED="2023-03-02"
+IMAGE_REVISION="A"
+IMAGE_VENDOR="Lammda"
+IMAGE_VERSION=1
+IMAGE_AUTHOR=hans@lammda.se
+
+
