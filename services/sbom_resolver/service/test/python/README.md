@@ -14,7 +14,7 @@ $ podman run  --rm docker.io/bomres/base_os_alpine make > Makefile
 
 ```
 The make command  is passed as a parameter to /docker-entrypoint.sh inside the 
-base_os_alpine container.  Below is the code snippet that copies the Makkefile 
+base_os_alpine container.  Below is the code snippet that copies the Makefile 
 to standard out. 
 NOTE: avoid use of -t argument since it may add newlines. 
 
@@ -30,16 +30,18 @@ fi
 ## make config
 The product to be built requires tools, therefore there is two rules that operates 
 in different directories.
-The product resides in $(DIR)/product and tools in $(DIR)/tool. The steps are basicly the same, it is only the 
+The product resides in $(DIR)/product and tools in $(DIR)/tool. The steps are basically the same, it is only the 
 directories that differs. 
 
 [podman](https://www.redhat.com/sysadmin/podman-inside-container) may need some configuration. 
 
 The first command in the _config: rule creates the build directory. The subdirectories are created from inside the 
-container by mount the host with the container using -v flag. This step may fail if you have missining capabilities. 
+container by mount the host with the container using -v flag. This step may fail if you have missing capabilities, e.g., "SYS_CHROOT".
+This can be fixed by editing/creating the file $HOME/.config/containers/containers.conf with the following content:
 
 ```
-$HOME/.config/containers/containers.conf  med innehållet:default_capabilities = [
+[CONTAINERS]
+default_capabilities = [
      "AUDIT_WRITE",
      "CHOWN",
      "DAC_OVERRIDE",
@@ -94,7 +96,7 @@ For now just a subset are covered in this guide
        cp -f /opt/base_os/scripts/mkimage-alpine.bash  /sandbox/base_os/build_dir/scripts/mkimage-alpine.bash
     fi  
 ```
-The mkimage-alpine.bash takes a list of packages and installs them in a sbubdirectory. 
+The mkimage-alpine.bash takes a list of packages and installs them in a subdirectory. 
 
 rootfs="$(mktemp -d "${TMPDIR:-/var/tmp}/alpine-docker-rootfs-XXXXXXXXXX")"
 apk --root "$rootfs"
@@ -131,11 +133,11 @@ repo+=("main")
 repo+=("community")
 ```
 ### private build 
-This is basicly the same as public build, however all packages are retrieved from a local directory. 
+This is basically the same as public build, however all packages are retrieved from a local directory. 
 It also adds a bom.sh script that extract additional data from the package manager, such as project url. 
 
 ### test
-currently it is just executues bom.sh and stores the result in sbom/os.bom as plain text. 
+currently it is just executes bom.sh and stores the result in sbom/os.bom as plain text. 
 
 ### aggregate
 
