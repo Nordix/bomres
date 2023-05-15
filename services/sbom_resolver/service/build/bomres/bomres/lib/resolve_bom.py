@@ -276,6 +276,8 @@ def main():
 
     if args.cache:
         index_path = args.cache + "/APKINDEX-" + hash + ".json"
+        if args.debug:
+           sys.stdout.write("Cache file: %s\n" % index_path ) 
         cache_path = Path(index_path)
         if not cache_path.exists():
             sys.stderr.write(

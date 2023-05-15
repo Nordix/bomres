@@ -10,8 +10,9 @@
 # Sandbox for image build 
 SANDBOX=/tmp/sandbox
 SANDBOX=/opt/sandbox
-TARGET=product
+SANDBOX=/tmp/snok2
 TARGET=tool
+TARGET=product
 
 # Cloned repositoy of Alpine Build Manifest ( APKBUILD ) 
 ALPINE_REPO=/tmp/alpine
@@ -80,7 +81,7 @@ ind_2:
 #################################################   
 
 python_resolve: 
-	python3  ../../build/bomres/bomres/lib/resolve_bom.py   --packages $(SANDBOX)/$(TARGET)/build/base_os/sbom/aggregated.json    --cache $(ALPINE_REPO)/cache         --output $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json #  --debug 
+	python3  ../../build/bomres/bomres/lib/resolve_bom.py   --packages $(SANDBOX)/$(TARGET)/build/base_os/sbom/aggregated.json    --cache $(ALPINE_REPO)/cache         --output $(SANDBOX)/$(TARGET)/build/base_os/sbom/resolved.json   --debug 
 
 
 
@@ -139,7 +140,7 @@ cycle: pip aggregate python_index python_resolve python_file
 #
 #################################################   
 
-PACKAGE=apk-tools
+PACKAGE=busybox
 apklib: 
 	python3 ../../build/bomres/bomres/lib/apklib.py --checkout $(ALPINE_REPO)/checkout/ --src $(ALPINE_REPO)/src/  --name  $(PACKAGE) --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json    --output /tmp/apklib.json
 
