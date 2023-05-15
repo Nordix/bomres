@@ -10,7 +10,7 @@
 # Sandbox for image build 
 SANDBOX=/tmp/sandbox
 SANDBOX=/opt/sandbox
-SANDBOX=/tmp/snok2
+SANDBOX=/home/hans/bomres/build/sandbox
 TARGET=tool
 TARGET=product
 
@@ -140,7 +140,7 @@ cycle: pip aggregate python_index python_resolve python_file
 #
 #################################################   
 
-PACKAGE=busybox
+PACKAGE=lighttpd
 apklib: 
 	python3 ../../build/bomres/bomres/lib/apklib.py --checkout $(ALPINE_REPO)/checkout/ --src $(ALPINE_REPO)/src/  --name  $(PACKAGE) --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json    --output /tmp/apklib.json
 

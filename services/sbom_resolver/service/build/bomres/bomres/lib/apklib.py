@@ -75,6 +75,21 @@ def export_json(inp):
     return y
 
 
+def extract_multiline_variable(data, variable): 
+
+    values = None
+    start_index = data.find(variable)
+    if start_index != -1:
+       start_index = data.find('"', start_index) + 1
+       end_index = data.find('"', start_index)
+       values = data[start_index:end_index].split()
+
+    return values
+    
+
+
+
+
 def handle_double_colon(string):
     """
      From the APKBUILD spec , see link in the top of this file 
@@ -916,6 +931,35 @@ install="
           sys.stderr.write("Problem parsing tools/checkdepends %s \n" % p )  
       result['tools']['checkdepends'] = tmp_check_dep
     
+    """
+      ISSUE 95: source files listed in variables and included in source list, this needs to be expanded 
+
+      source="https://busybox.net/downloads/busybox-$pkgver.tar.bz2
+      ssl_client.c
+      $_openrc_files
+      $_mdev_openrc_files
+      $_extras_openrc_files
+
+    """
+    expanded_source_list = [] 
+    if 'source' in result:
+        for src in result['source']:
+         if  src['remote'][0] == '$' and src['remote'][1] == '_': 
+            source_key = src['remote'][1:]
+            source_list = extract_multiline_variable(buff, source_key)
+            for skey in source_list: 
+              skey_tmp = {} 
+              skey_tmp['local'] = skey 
+              skey_tmp['remote'] = skey 
+              expanded_source_list.append(skey_tmp)  
+         else: 
+            expanded_source_list.append(src)  
+
+    result['source'] = expanded_source_list
+    
+    # end ISSUE 95 
+
+
     # source section consists of the following entries
     #  external code with url ://
     #  external patch with url ://
@@ -934,7 +978,6 @@ install="
         result['download']['internal']['build'] = []
         source = result['source']
         for src in result['source']:
-
             # Expand vaiables
 
             e_path = src['remote']
