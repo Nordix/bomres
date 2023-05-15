@@ -1,3 +1,18 @@
+"""
+
+  
+  Below is a format description of APKBUILD 
+
+  https://wiki.alpinelinux.org/wiki/APKBUILD_Reference
+
+  This is a ad-hoc developed parser of APKBUILD files 
+
+  There is many edge cases and exemptions, focus is to keep up with latest version of Alpine and the reference suite 
+
+
+"""
+
+
 import os
 import sys
 import json
@@ -61,6 +76,13 @@ def export_json(inp):
 
 
 def handle_double_colon(string):
+    """
+     From the APKBUILD spec , see link in the top of this file 
+
+     You can set target filename (eg 'save as...') by prefixing the URI with filename::. 
+     This is useful when the remote filename is not specified in the URI (ie, does not end in '/software-1.0.tar.gz'),
+
+    """
     tmp = string.split('::')
     result = {}
     result['remote'] = ""
@@ -79,6 +101,25 @@ def handle_double_colon(string):
             result['remote'] = string
             result['local'] = string
         return result
+
+def sed_bash_mapper(input, map): 
+
+
+    # map:    {'pkgver': '6.3_p20221112'} 
+    # input:  $pkgver/_p/- 
+    # output: 6.3-20221112
+
+    pattern = r"\$(.*?)\/(.*?)\/(.*)"
+    result = input 
+    matches =  re.match(pattern, input)
+    if matches:
+       variable = matches.group(1)
+       old = matches.group(2)
+       new = matches.group(3)
+       if variable in map: 
+           result  = map[variable].replace(old, new)
+    return result 
+
 
 
 def parse_apkbuild_manifest(name, repository, path, repo_hash_dict, apkbuild, repolink):
@@ -155,7 +196,17 @@ install="
     # See issue https://github.com/Nordix/bomres/issues/48
     prevent_version_truncation_list = [] 
 
+    cond_var_map = {} 
     for s in buff.split('\n'):
+
+        
+        pattern = r'^\[\s*-z\s*"\$([A-Za-z_][A-Za-z_0-9]*)"\s*\]\s*&&\s(.*)'
+        match = re.search(pattern, s)
+        if match: 
+           variable_name = match.group(1)
+           rest = match.group(2).split('=')
+           if os.environ.get(variable_name) is None and len(rest) == 2:
+             cond_var_map[rest[0]] = rest[1].replace('"', '').replace("$%s" % rest[0],'')
 
         if re.findall(r'^pkgname=.*?$', s):
             v = s.split('=')[1].strip('"')
@@ -719,9 +770,28 @@ install="
     #   by removing the suffix of pkgver (which is the micro package version).  \
     #   E.g., if pkgver=3.28.0 then ${pkgver%.*} would return 3.28
 
+
+    # Remove trailing comments in extracted variables 
+    pattern = r'\s*#.*$'
+    for var in var_map: 
+       var_map[var] = re.sub(pattern, '', var_map[var])
+
+    # convert  openssl-dev>3  to openssl-dev for makedepends_build and makedepends_host
+    pattern = r">\d+"
+    for var in var_map: 
+       if var in ['makedepends_build','makedepends_host']: 
+         var_map[var] = re.sub(pattern, '', var_map[var])
+      
+
+    # Append conditional dependencies [ -z  $BOOTSTRAP ] && makedepends = $makedepends perl openssl perl 
+    for var in var_map: 
+       if var in cond_var_map: 
+         var_map[var] = var_map[var] + " " + cond_var_map[var]
+
     exp_var_map = {}
     for var in var_map:
         value = var_map[var]
+        value = sed_bash_mapper(value, var_map)
         new_key = value.replace('$', "")
         if re.findall('%.*', new_key):
             new_key = new_key.replace('%.*', '')
@@ -741,7 +811,8 @@ install="
             if new_key in var_map:
                 exp_var_map[var] = var_map[new_key]
             else:
-                exp_var_map[var] = var_map[var]
+                # Fixed issues with regexp here
+                exp_var_map[var]  =  sed_bash_mapper(var_map[var], var_map) 
 
     result['var_map'] = exp_var_map
 
@@ -770,9 +841,13 @@ install="
     #    compile: makedepends
     #                 $depends_dev
     #
+
+
+
     tool_dep = [] 
     if 'makedepends' in result: 
       for dep in result['makedepends']: 
+        entry = ""
         if dep[0] == '$' or dep[0] == '_' : 
           key = dep[1:]
           if key in var_map and len(var_map[key]) > 0: 
