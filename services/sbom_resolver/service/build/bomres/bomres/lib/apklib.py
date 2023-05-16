@@ -797,6 +797,11 @@ install="
        if var in ['makedepends_build','makedepends_host']: 
          var_map[var] = re.sub(pattern, '', var_map[var])
       
+    # convert !gettext-dev to gettext-dev
+    pattern = r'!\s*([^!]+)'
+    for var in var_map: 
+        var_map[var] = re.sub(pattern, '', var_map[var])
+      
 
     # Append conditional dependencies [ -z  $BOOTSTRAP ] && makedepends = $makedepends perl openssl perl 
     for var in var_map: 

@@ -139,7 +139,7 @@ tool_download_source:
 	make _download_source DIR=$(DIR)/tool
 
 build: init config prepare public_build download private_build test aggregate
-resolve: clone index res download_source 
+resolve: clone index res # download_source 
 
 tool_build: tool_config  tool_init  tool_prepare tool_public_build  tool_download tool_private_build tool_aggregate tool/builder/Makefile tool/builder/build.sh  
 tool_prod_build:   keygen  check  pkg 
