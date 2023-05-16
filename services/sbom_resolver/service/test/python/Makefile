@@ -8,14 +8,13 @@
 
 
 # Sandbox for image build 
-SANDBOX=/tmp/sandbox
-SANDBOX=/opt/sandbox
-SANDBOX=/home/hans/bomres/build/sandbox
+SANDBOX=/home/hans/bomres/sandbox
 TARGET=tool
 TARGET=product
 
 # Cloned repositoy of Alpine Build Manifest ( APKBUILD ) 
 ALPINE_REPO=/tmp/alpine
+ALPINE_REPO=/home/hans/bomres/alpine
 
 # To avoid problems , always run pip install when python source is changed , see cycle rule 
 pip: 
@@ -66,7 +65,7 @@ ind_0:
 	python3  ../../build/bomres/bomres/lib/aggregate_bom.py      --pkgindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/apkindex.tar   --output   $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json
 
 ind_1: 
-	python3  ../../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json     --src      $(ALPINE_REPO)/src        --checkout   $(ALPINE_REPO)/checkout --cache $(ALPINE_REPO)/cache --debug #  --deep
+	python3  ../../build/bomres/bomres/lib/create_apkcache.py    --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json     --src      $(ALPINE_REPO)/src        --checkout   $(ALPINE_REPO)/checkout --cache $(ALPINE_REPO)/cache --debug  # --deep
 
 ind_2: 
 	python3  ../../build/bomres/bomres/lib/parse_apkbuild.py     --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json     --checkout $(ALPINE_REPO)/checkout   --cache      $(ALPINE_REPO)/cache
@@ -140,7 +139,7 @@ cycle: pip aggregate python_index python_resolve python_file
 #
 #################################################   
 
-PACKAGE=lighttpd
+PACKAGE=gcc
 apklib: 
 	python3 ../../build/bomres/bomres/lib/apklib.py --checkout $(ALPINE_REPO)/checkout/ --src $(ALPINE_REPO)/src/  --name  $(PACKAGE) --apkindex $(SANDBOX)/$(TARGET)/build/base_os/sbom/index.json    --output /tmp/apklib.json
 
